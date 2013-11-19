@@ -26,6 +26,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int                 mFrameHeight;
     SurfaceHolder               holder;
     private boolean mRun = false;
+    
+    private static int mFrameCount = 0;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -101,11 +103,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         int[] rgba = mRGBA;
         Bitmap bmp = mBitmap;
 
+        bmp.setPixels(rgba, 0, mBitmap.getWidth() , 0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+
         // ###dc### native process..(opencv)
         native_cv_facex(bmp);
-        
-        //funcs.showpreview(mBitmap.getWidth(), mBitmap.getHeight(), data, rgba);
-        bmp.setPixels(rgba, 0, mBitmap.getWidth() , 0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+
         return bmp;
     }
     
@@ -121,14 +123,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
               
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
-                Log.i("test", "onPreviewFrame");
+                mFrameCount++;
+//                Log.i("test", "onPreviewFrame");
                 
                 if ( !mRun ) {
                     mFrame = data;
                     mCameraIsInitialized = true;
-                    DoImageProcessing();                    
-                }               
-            }           
+                    if( mFrameCount>=60 ) {
+                        mFrameCount = 0;
+                        DoImageProcessing();
+                    }
+                }
+            }
         });
         return true;
     }
@@ -154,7 +160,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void DoImageProcessing() 
     {
-        //Log.i("MyRealTimeImageProcessing", "DoImageProcessing():");
+//        Log.i("MyRealTimeImageProcessing", "DoImageProcessing():");
         mRun = true;
         try {
             while (mRun && !mCameraIsInitialized) {
@@ -165,32 +171,31 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-            Bitmap bmp = null;
-            Bitmap largebmp;
-            synchronized (this) {            
-                bmp = processFrame(mFrame);
-            }
-            Canvas c = null;
-            try{
-                c = holder.lockCanvas(null);
-                //c.drawColor(Color.BLACK);
-                synchronized(holder){
-                    if (bmp != null) {
-                        if (c != null) {
-                            largebmp = Bitmap.createScaledBitmap(bmp, mFrameWidth, mFrameHeight, false);
-                            c.drawBitmap(largebmp,0,0, null);
-                        }
+        Bitmap bmp = null;
+        Bitmap largebmp;
+        synchronized (this) {            
+            bmp = processFrame(mFrame);
+        }
+        Canvas c = null;
+        try{
+            c = holder.lockCanvas(null);
+            //c.drawColor(Color.BLACK);
+            synchronized(holder){
+                if (bmp != null) {
+                    if (c != null) {
+                        largebmp = Bitmap.createScaledBitmap(bmp, mFrameWidth, mFrameHeight, false);
+                        c.drawBitmap(largebmp,0,0, null);
                     }
                 }
             }
-            finally{                
-                if(c != null){
-                    holder.unlockCanvasAndPost(c);
-                }
+        }
+        finally{
+            if(c != null){
+                holder.unlockCanvasAndPost(c);
             }
-            mRun = false;
+        }
+        mRun = false;
     }
-//http://blog.naver.com/jai1215?Redirect=Log&logNo=70175510298
     
     private void setPreviewSize(int width, int height) {
         Camera.Parameters params = mCamera.getParameters();
