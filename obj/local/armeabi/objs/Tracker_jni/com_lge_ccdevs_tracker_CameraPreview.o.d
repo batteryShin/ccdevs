@@ -159,7 +159,8 @@ obj/local/armeabi/objs/Tracker_jni/com_lge_ccdevs_tracker_CameraPreview.o: \
  /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_vector.c \
  /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_range_errors.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_bvector.h \
- /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h
+ /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h \
+ jni/Tracker.h
 
 /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stdio.h:
 
@@ -488,3 +489,5 @@ jni/kpmtypes.h:
 /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_bvector.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r8b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h:
+
+jni/Tracker.h:
