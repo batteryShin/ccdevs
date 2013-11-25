@@ -27,6 +27,7 @@ LOCAL_SRC_FILES:= \
 	com_lge_ccdevs_tracker_CameraPreview.cpp	\
 	FaceDetector.cpp	\
 	FaceAligner.cpp		\
+	Tracker.cpp			\
 	Vec2d.cpp			\
 	Vec3d.cpp			\
 	Homography.cpp		\

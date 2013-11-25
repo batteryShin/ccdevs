@@ -1,4 +1,5 @@
 #include <cv.h>
+#include <cxcore.h>
 #include <highgui.h>
 using namespace std;
 
@@ -21,8 +22,8 @@ class Tracker{
 
     void updateHueImage(IplImage* pImg);
 public:
-    Tracker(IplImage * pImg, CvRect  pFaceRect);
+    Tracker(IplImage * pImg, CvRect pFaceRect);
     ~Tracker();
-    CvBox2d track(IplImage* pImg);
+    CvBox2D track(IplImage* pImg);
 
 };

@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex
   (JNIEnv *, jobject, jobject);
 
+/*
+ * Class:     com_lge_ccdevs_tracker_CameraPreview
+ * Method:    native_cv_track
+ * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Landroid/graphics/RectF;)V
+ */
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1track
+  (JNIEnv *, jobject, jobject, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

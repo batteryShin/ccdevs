@@ -19,6 +19,7 @@
 #include "com_lge_ccdevs_tracker_CameraPreview.h"
 #include "FaceDetector.h"
 #include "FaceAligner.h"
+#include "Tracker.h"
 
 #define TAG_DEBUG "CameraPreview-JNI"
 
@@ -33,18 +34,21 @@ struct fields_t {
 	jmethodID bitmapConstructor;
 	jclass fileClazz;
 	jmethodID fileConstructor;
+	jclass rectfClazz;
+	jmethodID rectfConstructor;
 };
 
 static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
-JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex (JNIEnv *env, jobject thiz, jobject srcimg) {
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex
+(JNIEnv *env, jobject thiz, jobject srcimg) {
 	AndroidBitmapInfo bInfo;
 //    uint32_t* bPixs;
     char *bPixs;
 	int bRet;
 	LOGE("**IN JNI bitmap converter IN!");
-//1. retrieve information about the bitmap
+	//1. retrieve information about the bitmap
 	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
 		LOGE("AndroidBitmap_getInfo failed! error = %d", bRet);
 		return;
@@ -101,6 +105,71 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1fac
 
 //	return env->NewObject(fields.bitmapClazz, fields.bitmapConstructor, (int)bitmap, p, true, NULL, -1);
 	return;
+}
+
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1track
+(JNIEnv *env, jobject thiz, jobject srcimg, jobject dstimg, jobject rgn) {
+	AndroidBitmapInfo bInfo;
+    char *bPixs;
+	int bRet;
+
+    // convert src_img
+	LOGE("**IN JNI bitmap converter IN!");
+	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
+		LOGE("AndroidBitmap_getInfo failed(src)! error = %d", bRet);
+		return;
+	}
+	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE("Bitmap(src) format is not RGBA_8888!");
+		return;
+	}
+
+	if ((bRet = AndroidBitmap_lockPixels(env, srcimg, (void**)&bPixs)) < 0) {
+		LOGE("AndroidBitmap_lockPixels() failed(src)! error = %d", bRet);
+		return;
+	}
+
+	LOGE("#### Start JNI bitmap processing(src)");
+	IplImage* src = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(src->imageData, bPixs, src->imageSize);
+	AndroidBitmap_unlockPixels(env, srcimg);
+
+    // convert dst_img
+	if ((bRet = AndroidBitmap_getInfo(env, dstimg, &bInfo)) < 0) {
+		LOGE("AndroidBitmap_getInfo failed(dst)! error = %d", bRet);
+		return;
+	}
+	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE("Bitmap(dst) format is not RGBA_8888!");
+		return;
+	}
+
+	if ((bRet = AndroidBitmap_lockPixels(env, dstimg, (void**)&bPixs)) < 0) {
+		LOGE("AndroidBitmap_lockPixels() failed(dst)! error = %d", bRet);
+		return;
+	}
+
+	LOGE("#### Start JNI bitmap processing(dst)");
+	IplImage* dst = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(dst->imageData, bPixs, dst->imageSize);
+	AndroidBitmap_unlockPixels(env, dstimg);
+
+    // convert RectF
+    
+
+
+	//4. apply processing
+
+    // TODO : RectF -> x,y,w,h
+    //
+    int x, y, w, h;
+	Tracker *tracker = new Tracker(src, cvRect(x,y,w,h));
+    CvBox2D res_box = tracker->track(dst);
+
+    // TODO : CvBox2D -> RectF
+    //
+
+    return;
 }
 
 #ifdef __cplusplus

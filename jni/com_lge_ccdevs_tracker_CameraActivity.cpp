@@ -20,6 +20,8 @@ struct fields_t {
 	jmethodID bitmapConstructor;
 	jclass fileClazz;
 	jmethodID fileConstructor;
+    jclass rectfClazz;
+    jmethodID rectfConstructor;
 };
 
 static fields_t fields;
@@ -44,15 +46,15 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraActivity_native_1init (
 		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/Bitmap");
 		return;
 	}
-	fields.bitmapConstructor = env->GetMethodID(fields.bitmapClazz, "<init>", "(I[BIIIZZ[B[I)V");
-	if (fields.bitmapConstructor == NULL) {
-		jniThrowException(env, "java/lang/RuntimeException", "Can't find Bitmap constructor");
-		return;
-	}
-
 	fields.fileClazz = env->FindClass("java/io/File");
 	if (fields.fileClazz == NULL) {
 		jniThrowException(env, "java/lang/RuntimeException", "Can't find java/io/File");
+		return;
+	}
+
+	fields.rectfClazz = env->FindClass("android/graphics/RectF");
+	if (fields.rectfClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/RectF");
 		return;
 	}
 }
