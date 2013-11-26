@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 
 public class TargetView extends View {
+    private static final String TAG = "TargetView";;
     private PointF mPtTargetStart;
     private PointF mPtTargetEnd;
     
@@ -50,7 +51,7 @@ public class TargetView extends View {
     }
     
     public void drawTarget(RectF target) {
-        Log.d("test", "TargetView::drawTarget = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
+        Log.d(TAG, "TargetView::drawTarget = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
         mPtTargetStart.x = target.left;
         mPtTargetStart.y = target.top;
         

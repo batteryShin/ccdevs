@@ -12,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 public class TargetSettingView extends View {
+    private static final String TAG = "TargetSettingView";;
     private PointF mPtStart;
     private PointF mPtEnd;
        
@@ -43,13 +44,13 @@ public class TargetSettingView extends View {
     
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("test", "onTouchEvent");
+        Log.d(TAG, "onTouchEvent()");
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN :
                 mPtStart = new PointF();
                 mPtStart.x = event.getX();
                 mPtStart.y = event.getY();
-                Log.d("test", "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
+                Log.d(TAG, "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
                 return true;
             case MotionEvent.ACTION_MOVE :
                 if (mPtEnd == null) {
@@ -65,7 +66,7 @@ public class TargetSettingView extends View {
                 }
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
-                Log.d("test", "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);
+                Log.d(TAG, "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);
                 
                 this.invalidate();
                 return true;
@@ -77,7 +78,7 @@ public class TargetSettingView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (mPtStart != null && mPtEnd != null) {
-            Log.d("test", "onDraw");
+            Log.d(TAG, "onDraw");
             
             p.setColor(Color.CYAN);
             canvas.drawRect(mPtStart.x, mPtStart.y, mPtEnd.x, mPtEnd.y, p);

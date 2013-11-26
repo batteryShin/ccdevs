@@ -18,10 +18,15 @@ extern "C" {
 struct fields_t {
 	jclass bitmapClazz;
 	jmethodID bitmapConstructor;
+
 	jclass fileClazz;
 	jmethodID fileConstructor;
+
     jclass rectfClazz;
-    jmethodID rectfConstructor;
+	jfieldID rectf_left_ID;
+	jfieldID rectf_top_ID;
+	jfieldID rectf_right_ID;
+	jfieldID rectf_bottom_ID;
 };
 
 static fields_t fields;
@@ -46,6 +51,7 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraActivity_native_1init (
 		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/Bitmap");
 		return;
 	}
+
 	fields.fileClazz = env->FindClass("java/io/File");
 	if (fields.fileClazz == NULL) {
 		jniThrowException(env, "java/lang/RuntimeException", "Can't find java/io/File");
@@ -57,6 +63,11 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraActivity_native_1init (
 		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/RectF");
 		return;
 	}
+
+    fields.rectf_left_ID = env->GetFieldID(fields.rectfClazz, "left", "F");
+    fields.rectf_top_ID = env->GetFieldID(fields.rectfClazz, "top", "F");
+    fields.rectf_right_ID = env->GetFieldID(fields.rectfClazz, "right", "F");
+    fields.rectf_bottom_ID = env->GetFieldID(fields.rectfClazz, "bottom", "F");
 }
 
 #ifdef __cplusplus

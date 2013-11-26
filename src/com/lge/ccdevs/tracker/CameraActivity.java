@@ -30,6 +30,7 @@ import android.widget.LinearLayout;
 
 
 public class CameraActivity extends Activity {
+    private static final String TAG = "CameraActivity";;
     // Called when the activity is first created.
     Camera _camera;
     int fcount = 0;
@@ -56,7 +57,7 @@ public class CameraActivity extends Activity {
     private IOnDrawTargetListener mOnDrawTargetListener = new IOnDrawTargetListener() {
         @Override
         public void onDrawTarget(RectF target) {
-            Log.d("test", "CameraActivity::onDrawTarget");
+            Log.d(TAG, "onDrawTarget()");
             if (mShowTarget) {
                 if (target != null && !target.isEmpty()) {
                     mTargetView.drawTarget(target);
@@ -142,7 +143,7 @@ public class CameraActivity extends Activity {
     
     @Override
     protected void onDestroy() {
-        Log.d("test", "CameraActivity::onDestroy");
+        Log.d(TAG, "onDestroy()");
         //WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         //wm.removeView(mTargetLayer);
         
@@ -154,7 +155,7 @@ public class CameraActivity extends Activity {
     
     @Override
     protected void onPause() {
-        Log.d("test", "CameraActivity::onPause");
+        Log.d(TAG, "onPause()");
         super.onPause();
     }
 

@@ -32,10 +32,16 @@ extern "C" {
 struct fields_t {
 	jclass bitmapClazz;
 	jmethodID bitmapConstructor;
+
 	jclass fileClazz;
 	jmethodID fileConstructor;
+
 	jclass rectfClazz;
-	jmethodID rectfConstructor;
+	jfieldID rectf_left_ID;
+	jfieldID rectf_top_ID;
+	jfieldID rectf_right_ID;
+	jfieldID rectf_bottom_ID;
+	jfieldID rectfField;
 };
 
 static fields_t fields;
@@ -155,19 +161,36 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1tra
 	AndroidBitmap_unlockPixels(env, dstimg);
 
     // convert RectF
-    
+	fields.rectfClazz = env->FindClass("android/graphics/RectF");
+    fields.rectf_left_ID = env->GetFieldID(fields.rectfClazz, "left", "F");
+    fields.rectf_top_ID = env->GetFieldID(fields.rectfClazz, "top", "F");
+    fields.rectf_right_ID = env->GetFieldID(fields.rectfClazz, "right", "F");
+    fields.rectf_bottom_ID = env->GetFieldID(fields.rectfClazz, "bottom", "F");
 
+    float left = env->GetFloatField(rgn, fields.rectf_left_ID);
+    float top = env->GetFloatField(rgn, fields.rectf_top_ID);
+    float right = env->GetFloatField(rgn, fields.rectf_right_ID);
+    float bottom = env->GetFloatField(rgn, fields.rectf_bottom_ID);
+    LOGE("#### before track = ( %f, %f, %f, %f )",left,top,right,bottom);
 
 	//4. apply processing
-
-    // TODO : RectF -> x,y,w,h
-    //
-    int x, y, w, h;
-	Tracker *tracker = new Tracker(src, cvRect(x,y,w,h));
+	Tracker *tracker = new Tracker(src, cvRect(left,top,right-left,bottom-top));
     CvBox2D res_box = tracker->track(dst);
 
-    // TODO : CvBox2D -> RectF
-    //
+    float tw = res_box.size.width;
+    float th = res_box.size.height;
+    float tcx = res_box.center.x;
+    float tcy = res_box.center.y;
+    left = tcx-tw/2;
+    top = tcy-th/2;
+    right = tcx+tw/2;
+    bottom = tcy+th/2;
+    LOGE("#### after tracked = ( %f, %f, %f, %f )",left,top,right,bottom);
+
+    env->SetFloatField(rgn, fields.rectf_left_ID, left);
+    env->SetFloatField(rgn, fields.rectf_top_ID, top);
+    env->SetFloatField(rgn, fields.rectf_right_ID, right);
+    env->SetFloatField(rgn, fields.rectf_bottom_ID, bottom);
 
     return;
 }

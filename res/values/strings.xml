@@ -4,6 +4,6 @@
     <string name="app_name">MyTracker</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-    <string name="face_db_dir">/data/data/com.lge.facealign/databases/</string>
+    <string name="face_db_dir">/data/data/com.lge.ccdevs.tracker/databases/</string>
 
 </resources>
