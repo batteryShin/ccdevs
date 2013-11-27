@@ -19,7 +19,6 @@ import android.view.SurfaceView;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";;
     Camera mCamera;    
-    private byte[]              mFrame;
     private byte[]              mBuffer;
     private int                 mFrameSize;
     private Bitmap              mBitmap;
@@ -34,6 +33,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private static final int FRAME_COUNT = 30;
     private static int mFrameCount = 0;
     private RectF mTargetRect;
+    private RectF mDetectedRect;
     private Bitmap mPrevBMP;
 
     // ###dc### Native call for CV process..
@@ -55,8 +55,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         holder = getHolder();
         holder.addCallback(this);
         
-        mFrame = null;
         mBuffer = null;
+        
+        mDetectedRect = new RectF();
+        mTargetRect = new RectF();
     }
 
     @Override
@@ -94,7 +96,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 size = size * ImageFormat.getBitsPerPixel(mCamera.getParameters().getPreviewFormat()) / 8;
                 
                 mBuffer = new byte[size];
-                mFrame = new byte[size];
                 mCamera.addCallbackBuffer(mBuffer);
 
                 try {
@@ -115,17 +116,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // native process using opencv
 //        native_cv_facex(bmp);
-        if( mPrevBMP!=null && mTargetRect!=null ) {
+        if( mPrevBMP!=null && !mTargetRect.isEmpty()) {
             Log.d(TAG, "native_cv_track call");
             native_cv_track(mBitmap, mPrevBMP, mTargetRect);
         }
-        mPrevBMP = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        //mPrevBMP = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
         
-        // get detected rect and put it here
+        
+        // get detected rect and put it in mDetectedRect
+        mDetectedRect = mTargetRect;
         Log.d(TAG, "processFrame(), target rect = ( " + mTargetRect.left + ", "
-                + mTargetRect.top + ", " + mTargetRect.right + ", " + mTargetRect.bottom + " )");
-        
-        mIOnDrawTargetListener.onDrawTarget(new RectF(mTargetRect.left,mTargetRect.top,mTargetRect.right,mTargetRect.bottom));
+                        + mTargetRect.top + ", " + mTargetRect.right + ", " + mTargetRect.bottom + " )");
+        mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
 
         return;
     }
@@ -138,6 +140,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.e(TAG, "Can't open camera!");
             return false;
         }
+        mCamera.setDisplayOrientation(90);
         mCamera.setPreviewCallback(new Camera.PreviewCallback(){
               
             @Override
@@ -146,11 +149,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     mFrameCount++;
                     
                     if (!mRun) {
-                        mFrame = data;
                         mCameraIsInitialized = true;
                         if (mFrameCount >= FRAME_COUNT) {
                             mFrameCount = 0;
-                            DoImageProcessing();
+                            DoImageProcessing(data);
                         }
                     }
                 }
@@ -176,7 +178,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    private void DoImageProcessing() 
+    private void DoImageProcessing(byte[] data) 
     {
         mRun = true;
         try {
@@ -189,28 +191,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             e.printStackTrace();
         }
         synchronized (this) {            
-            processFrame(mFrame);
+            processFrame(data);
         }
-/*
-        Bitmap largebmp;
-        Canvas c = null;
-        try {
-            c = holder.lockCanvas(null);
 
-            synchronized(holder){
-                if (bmp != null) {
-                    if (c != null) {
-                        largebmp = Bitmap.createScaledBitmap(bmp, mFrameWidth, mFrameHeight, false);
-                        c.drawBitmap(largebmp,0,0, null);
-                    }
-                }
-            }
-        } finally{
-            if(c != null){
-                holder.unlockCanvasAndPost(c);
-            }
-        }
-*/
         mRun = false;
     }
     
@@ -237,9 +220,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         float top = mTargetRect.top;
         float left = mTargetRect.left;
         float bottom = mTargetRect.bottom;
-        float right = mTargetRect.right;
-        //float width = mTargetRect.width();
-        //float height = mTargetRect.height();        
+        float right = mTargetRect.right;        
         
         Log.d(TAG, "target info : (top, left, bottom, right) = ("
                 + top + ", " + left + ", " + bottom + ", " + right + ")");
