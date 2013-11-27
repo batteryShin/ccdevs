@@ -21,8 +21,10 @@ public class TargetSettingView extends View {
     public TargetSettingView(Context context) {
         super(context);
         
-        mPtStart = null;
-        mPtEnd = null;
+        /*mPtStart = null;
+        mPtEnd = null;*/
+        mPtStart = new PointF();
+        mPtEnd = new PointF();
                 
         p = new Paint();
         p.setStrokeWidth(5);
@@ -33,8 +35,8 @@ public class TargetSettingView extends View {
     public TargetSettingView(Context context, AttributeSet attrs) {
         super(context, attrs);
         
-        mPtStart = null;
-        mPtEnd = null;
+        mPtStart = new PointF();
+        mPtEnd = new PointF();
                 
         p = new Paint();
         p.setStrokeWidth(5);
@@ -47,23 +49,23 @@ public class TargetSettingView extends View {
         Log.d(TAG, "onTouchEvent()");
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN :
-                mPtStart = new PointF();
+                //mPtStart = new PointF();
                 mPtStart.x = event.getX();
                 mPtStart.y = event.getY();
                 Log.d(TAG, "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
                 return true;
             case MotionEvent.ACTION_MOVE :
-                if (mPtEnd == null) {
+                /*if (mPtEnd == null) {
                     mPtEnd = new PointF();
-                }
+                }*/
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
                 this.invalidate();
                 return true;
             case MotionEvent.ACTION_UP :
-                if (mPtEnd == null) {
+                /*if (mPtEnd == null) {
                     mPtEnd = new PointF();
-                }
+                }*/
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
                 Log.d(TAG, "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);

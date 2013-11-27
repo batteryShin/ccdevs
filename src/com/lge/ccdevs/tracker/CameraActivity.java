@@ -71,8 +71,7 @@ public class CameraActivity extends Activity {
         super.onCreate(savedInstanceState);
         mContext = this;        
         
-        mInitialTargetRect = null;
-        
+        mInitialTargetRect = null;        
         
         // set preview display
         mPreview = new CameraPreview(mContext);        
@@ -89,6 +88,26 @@ public class CameraActivity extends Activity {
         mTargetSettingView = (TargetSettingView)mTargetLayer.findViewById(R.id.target_setting_view);
         mTargetView = (TargetView)mTargetLayer.findViewById(R.id.target_view);
         
+        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+
+        int width = metrics.widthPixels;
+        int height = metrics.heightPixels;
+
+        WindowManager.LayoutParams wmParams = new WindowManager.LayoutParams(width,
+                height, 0, 0,
+                LayoutParams.TYPE_PHONE,
+                LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                        LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                PixelFormat.RGBA_8888);
+
+        wmParams.gravity = Gravity.LEFT | Gravity.TOP;
+        wmParams.setTitle("TargetSetting");
+        wmParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
+
+        wm.addView(mTargetLayer, wmParams);
         
         Button btn_done = (Button)mTargetLayer.findViewById(R.id.btn_done);
         btn_done.setOnClickListener(new OnClickListener() {
@@ -102,11 +121,7 @@ public class CameraActivity extends Activity {
                 
                 mPreview.setTarget(mInitialTargetRect);
                 
-                mShowTarget = true;
-                
-                // remove target setting window
-                //WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-                //wm.removeView(mTargetSettingLayer);
+                mShowTarget = true;                
             }});
 
         InputStream is = null;
@@ -140,22 +155,15 @@ public class CameraActivity extends Activity {
             e.printStackTrace();
         }
     }
-    
-    @Override
-    protected void onDestroy() {
-        Log.d(TAG, "onDestroy()");
-        //WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-        //wm.removeView(mTargetLayer);
         
-        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-        wm.removeViewImmediate(mTargetLayer);
-        
-        super.onDestroy();
-    }
-    
     @Override
     protected void onPause() {
         Log.d(TAG, "onPause()");
+        
+        mShowTarget = false;
+        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+        wm.removeView(mTargetLayer);
+        
         super.onPause();
     }
 
@@ -186,39 +194,19 @@ public class CameraActivity extends Activity {
     }
     
     private void startTargetSetting() {
+        mTargetLayer.setVisibility(View.VISIBLE);
         mTargetSettingLayer.setVisibility(View.VISIBLE);
-        mTargetView.setVisibility(View.GONE);
-        
-        
-        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-        DisplayMetrics metrics = new DisplayMetrics();                
-        wm.getDefaultDisplay().getMetrics(metrics);
-        
-        int width = metrics.widthPixels;
-        int height = metrics.heightPixels;
-                              
-
-        WindowManager.LayoutParams wmParams = new WindowManager.LayoutParams(width,
-                height, 0, 0,
-                LayoutParams.TYPE_PHONE,
-                LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
-                        LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.RGBA_8888);
-        
-        wmParams.gravity = Gravity.LEFT | Gravity.TOP;
-        wmParams.setTitle("TargetSetting");
-        wmParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
-        
-        wm.addView(mTargetLayer, wmParams);
+        mTargetView.setVisibility(View.GONE);        
     }
     
     private void showTarget() {
+        mTargetLayer.setVisibility(View.VISIBLE);
         mTargetSettingView.setVisibility(View.VISIBLE);
         mShowTarget = true;
     }
     
     private void hideTarget() {
+        mTargetLayer.setVisibility(View.GONE);
         mTargetSettingView.setVisibility(View.GONE);
         mShowTarget = false;
     }
