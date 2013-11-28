@@ -46,13 +46,13 @@ public class TargetSettingView extends View {
     
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouchEvent()");
+        Log.i(TAG, "onTouchEvent()");
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN :
                 //mPtStart = new PointF();
                 mPtStart.x = event.getX();
                 mPtStart.y = event.getY();
-                Log.d(TAG, "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
+                Log.i(TAG, "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
                 return true;
             case MotionEvent.ACTION_MOVE :
                 /*if (mPtEnd == null) {
@@ -68,7 +68,7 @@ public class TargetSettingView extends View {
                 }*/
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
-                Log.d(TAG, "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);
+                Log.i(TAG, "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);
                 
                 this.invalidate();
                 return true;
@@ -80,7 +80,7 @@ public class TargetSettingView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (mPtStart != null && mPtEnd != null) {
-            Log.d(TAG, "onDraw");
+            Log.i(TAG, "onDraw");
             
             p.setColor(Color.CYAN);
             canvas.drawRect(mPtStart.x, mPtStart.y, mPtEnd.x, mPtEnd.y, p);

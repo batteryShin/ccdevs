@@ -126,8 +126,7 @@ public class CameraActivity extends Activity {
 
         InputStream is = null;
         FileOutputStream fos = null;
-        //File outDir = new File(getString(R.string.face_db_dir));
-        File outDir = new File("getString(R.string.face_db_dir)");
+        File outDir = new File(getString(R.string.face_db_dir));
         outDir.mkdirs();
 
         try {

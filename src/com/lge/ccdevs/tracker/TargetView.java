@@ -51,7 +51,7 @@ public class TargetView extends View {
     }
     
     public void drawTarget(RectF target) {
-        Log.d(TAG, "TargetView::drawTarget = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
+        Log.i(TAG, "TargetView::drawTarget = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
         mPtTargetStart.x = target.left;
         mPtTargetStart.y = target.top;
         
