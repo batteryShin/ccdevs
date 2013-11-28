@@ -40,12 +40,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean mTargetSet = false;
     
     
-    private static final int FRAME_COUNT = 30;
+    private static final int FRAME_COUNT = 15;
     private static int mFrameCount = 0;
     private RectF mTargetRect;
     private RectF mScaledTargetRect;
     private RectF mDetectedRect;
-    private Bitmap mPrevBMP;
     private static int mDispWidth;
     private static int mDispHeight;
     private float mScaleX;
@@ -53,7 +52,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
-	private native final void native_cv_track(Bitmap simg, Bitmap dimg, RectF rgn);
+    private native final void native_cv_init(Bitmap base_img, RectF rgn);
+	private native final RectF native_cv_track(Bitmap img);
 //	private native final File native_cv_merge(ArrayList<Bitmap> imgs);
 
     static public void decodeYUV420SP(int[] rgb, byte[] yuv420sp, int width, int height) {
@@ -133,7 +133,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     protected void onPreviewStarted(int previewWidth, int previewHeight) {
         mFrameSize = previewWidth * previewHeight;
         mBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);        
-        mPrevBMP = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
     }
     
     public void setupCamera(int width, int height) {
@@ -168,42 +167,22 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // native process using opencv
 //        native_cv_facex(bmp);
-        if( mPrevBMP!=null && !mTargetRect.isEmpty()) {
-            Log.d(TAG, "native_cv_track call");
-            mScaledTargetRect.set(mTargetRect.top * mScaleX,
-                                    mTargetRect.left * mScaleY,
-                                    mTargetRect.bottom * mScaleX,
-                                    mTargetRect.right * mScaleY);
-            Log.d(TAG, "target info : (top, left, bottom, right) = ("
-                    + mScaledTargetRect.top + ", " + mScaledTargetRect.left + ", " + mScaledTargetRect.bottom + ", " + mScaledTargetRect.right + ")");
-            
-            String path = Environment.getExternalStorageDirectory().toString();
-            OutputStream fOut = null;
-            File file = new File(path, "sampleimage.jpg");
-            try {
-                fOut = new FileOutputStream(file);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } finally {
-                mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-                try {
-                    fOut.flush();
-                    fOut.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }                
-            }
-            
-            
-            native_cv_track(mBitmap, mPrevBMP, mScaledTargetRect);
+        if( mTargetSet ) {
+            Log.i(TAG, "native_cv_track() call");
+            mScaledTargetRect = native_cv_track(mBitmap);
+            Log.i(TAG, "scaled rect : (top, left, bottom, right) = "
+                    + mScaledTargetRect.top + ", " + mScaledTargetRect.left + ", " + mScaledTargetRect.bottom + ", " + mScaledTargetRect.right);
         }
-        mPrevBMP = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
-        
         
         // get detected rect and put it in mDetectedRect
-        mDetectedRect = mTargetRect;
-        Log.d(TAG, "processFrame(), target rect = ( " + mTargetRect.left + ", "
-                        + mTargetRect.top + ", " + mTargetRect.right + ", " + mTargetRect.bottom + " )");
+        mDetectedRect.set(mScaledTargetRect.top / mScaleX,
+                            mScaledTargetRect.left / mScaleY,
+                            mScaledTargetRect.bottom / mScaleX,
+                            mScaledTargetRect.right / mScaleY);
+        Log.i(TAG, "draw rect = ( " + mDetectedRect.left + 
+                    ", " + mDetectedRect.top + 
+                    ", " + mDetectedRect.right + 
+                    ", " + mDetectedRect.bottom + " )");
         mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
 
         return;
@@ -289,6 +268,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     // camera is 90 degree rotated
                     mScaleX = (float)mFrameWidth / (float)mDispHeight;
                     mScaleY = (float)mFrameHeight / (float)mDispWidth;
+                    Log.i(TAG, "scaling param = " + mScaleX + ", " + mScaleY);
                     break;
                 }
             }
@@ -298,14 +278,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void setTarget(RectF target) {
         mTargetRect = target;
         
-        float top = mTargetRect.top;
-        float left = mTargetRect.left;
-        float bottom = mTargetRect.bottom;
-        float right = mTargetRect.right;        
+        mScaledTargetRect.set(mTargetRect.top * mScaleX,
+                                mTargetRect.left * mScaleY,
+                                mTargetRect.bottom * mScaleX,
+                                mTargetRect.right * mScaleY);
         
-        Log.d(TAG, "target info : (top, left, bottom, right) = ("
-                + top + ", " + left + ", " + bottom + ", " + right + ")");
-        
+        Log.i(TAG, "native_cv_init() call");
+        native_cv_init(mBitmap, mScaledTargetRect);
+
+        float top = mScaledTargetRect.top;
+        float left = mScaledTargetRect.left;
+        float bottom = mScaledTargetRect.bottom;
+        float right = mScaledTargetRect.right;        
+        Log.i(TAG, "target region = (" + top + ", " + left + 
+                    ", " + bottom + ", " + right + ")");
         mTargetSet = true;
     }
 }

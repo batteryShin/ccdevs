@@ -58,7 +58,7 @@ public class CameraActivity extends Activity {
     private IOnDrawTargetListener mOnDrawTargetListener = new IOnDrawTargetListener() {
         @Override
         public void onDrawTarget(RectF target) {
-            Log.d(TAG, "onDrawTarget()");
+            Log.i(TAG, "onDrawTarget()");
             if (mShowTarget) {
                 if (target != null && !target.isEmpty()) {
                     mTargetView.drawTarget(target);

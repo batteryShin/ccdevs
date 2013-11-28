@@ -82,3 +82,11 @@ CvBox2D Tracker::track(IplImage * pImg)
 
     return faceBox;
 }
+
+float Tracker::getPrevWidth() {
+    return prevFaceRect.width;
+}
+
+float Tracker::getPrevHeight() {
+    return prevFaceRect.height;
+}

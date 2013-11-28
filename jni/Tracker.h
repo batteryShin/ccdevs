@@ -26,4 +26,6 @@ public:
     ~Tracker();
     CvBox2D track(IplImage* pImg);
 
+    float getPrevWidth();
+    float getPrevHeight();
 };

@@ -37,6 +37,7 @@ struct fields_t {
 	jmethodID fileConstructor;
 
 	jclass rectfClazz;
+    jmethodID rectfConstructor;
 	jfieldID rectf_left_ID;
 	jfieldID rectf_top_ID;
 	jfieldID rectf_right_ID;
@@ -46,6 +47,79 @@ struct fields_t {
 
 static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
+
+Tracker *tracker;
+
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
+(JNIEnv *env, jobject thiz, jobject srcimg, jobject rgn) {
+	jclass clazz;
+
+	clazz = env->FindClass(kClassPathName);
+	if (clazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find com/lge/ccdevs/tracker/CameraActivity");
+		return;
+	}
+
+	fields.bitmapClazz = env->FindClass("android/graphics/Bitmap");
+	if (fields.bitmapClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/Bitmap");
+		return;
+	}
+
+	fields.fileClazz = env->FindClass("java/io/File");
+	if (fields.fileClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find java/io/File");
+		return;
+	}
+
+	fields.rectfClazz = env->FindClass("android/graphics/RectF");
+	if (fields.rectfClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/RectF");
+		return;
+	}
+    fields.rectfConstructor = env->GetMethodID(fields.rectfClazz, "<init>", "(FFFF)V");
+	if (fields.rectfConstructor == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find RectF constructor");
+		return;
+	}
+    fields.rectf_left_ID = env->GetFieldID(fields.rectfClazz, "left", "F");
+    fields.rectf_top_ID = env->GetFieldID(fields.rectfClazz, "top", "F");
+    fields.rectf_right_ID = env->GetFieldID(fields.rectfClazz, "right", "F");
+    fields.rectf_bottom_ID = env->GetFieldID(fields.rectfClazz, "bottom", "F");
+
+
+
+    // convert img
+	AndroidBitmapInfo bInfo;
+    char *bPixs;
+	int bRet;
+	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
+		LOGE("AndroidBitmap_getInfo failed(src)! error = %d", bRet);
+		return;
+	}
+	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE("Bitmap(src) format is not RGBA_8888!");
+		return;
+	}
+
+	if ((bRet = AndroidBitmap_lockPixels(env, srcimg, (void**)&bPixs)) < 0) {
+		LOGE("AndroidBitmap_lockPixels() failed(src)! error = %d", bRet);
+		return;
+	}
+
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(img->imageData, bPixs, img->imageSize);
+	AndroidBitmap_unlockPixels(env, srcimg);
+
+    // convert RectF
+    float left = env->GetFloatField(rgn, fields.rectf_left_ID);
+    float top = env->GetFloatField(rgn, fields.rectf_top_ID);
+    float right = env->GetFloatField(rgn, fields.rectf_right_ID);
+    float bottom = env->GetFloatField(rgn, fields.rectf_bottom_ID);
+
+    LOGE("#### assign initial box = ( %f, %f, %f, %f )",left,top,right,bottom);
+	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
+}
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex
 (JNIEnv *env, jobject thiz, jobject srcimg) {
@@ -113,86 +187,60 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1fac
 	return;
 }
 
-JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1track
-(JNIEnv *env, jobject thiz, jobject srcimg, jobject dstimg, jobject rgn) {
+JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1track
+(JNIEnv *env, jobject thiz, jobject srcimg) {
 	AndroidBitmapInfo bInfo;
     char *bPixs;
 	int bRet;
 
-    // convert src_img
-	LOGE("**IN JNI bitmap converter IN!");
+    // convert img
 	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
 		LOGE("AndroidBitmap_getInfo failed(src)! error = %d", bRet);
-		return;
+		return 0;
 	}
 	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
 		LOGE("Bitmap(src) format is not RGBA_8888!");
-		return;
+		return 0;
 	}
 
 	if ((bRet = AndroidBitmap_lockPixels(env, srcimg, (void**)&bPixs)) < 0) {
 		LOGE("AndroidBitmap_lockPixels() failed(src)! error = %d", bRet);
-		return;
+		return 0;
 	}
 
-	LOGE("#### Start JNI bitmap processing(src)");
-	IplImage* src = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
-	memcpy(src->imageData, bPixs, src->imageSize);
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(img->imageData, bPixs, img->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
 
-    // convert dst_img
-	if ((bRet = AndroidBitmap_getInfo(env, dstimg, &bInfo)) < 0) {
-		LOGE("AndroidBitmap_getInfo failed(dst)! error = %d", bRet);
-		return;
-	}
-	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-		LOGE("Bitmap(dst) format is not RGBA_8888!");
-		return;
-	}
-
-	if ((bRet = AndroidBitmap_lockPixels(env, dstimg, (void**)&bPixs)) < 0) {
-		LOGE("AndroidBitmap_lockPixels() failed(dst)! error = %d", bRet);
-		return;
-	}
-
-	LOGE("#### Start JNI bitmap processing(dst)");
-	IplImage* dst = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
-	memcpy(dst->imageData, bPixs, dst->imageSize);
-	AndroidBitmap_unlockPixels(env, dstimg);
-
-    // convert RectF
-	fields.rectfClazz = env->FindClass("android/graphics/RectF");
-    fields.rectf_left_ID = env->GetFieldID(fields.rectfClazz, "left", "F");
-    fields.rectf_top_ID = env->GetFieldID(fields.rectfClazz, "top", "F");
-    fields.rectf_right_ID = env->GetFieldID(fields.rectfClazz, "right", "F");
-    fields.rectf_bottom_ID = env->GetFieldID(fields.rectfClazz, "bottom", "F");
-
-    float left = env->GetFloatField(rgn, fields.rectf_left_ID);
-    float top = env->GetFloatField(rgn, fields.rectf_top_ID);
-    float right = env->GetFloatField(rgn, fields.rectf_right_ID);
-    float bottom = env->GetFloatField(rgn, fields.rectf_bottom_ID);
-    LOGE("#### before track = ( %f, %f, %f, %f )",left,top,right,bottom);
-
-	//4. apply processing
-	Tracker *tracker = new Tracker(src, cvRect(left,top,right-left,bottom-top));
-    CvBox2D res_box = tracker->track(dst);
+    CvBox2D res_box = tracker->track(img);
 
     float tw = res_box.size.width;
     float th = res_box.size.height;
     float tcx = res_box.center.x;
     float tcy = res_box.center.y;
-    left = tcx-tw/2;
-    top = tcy-th/2;
-    right = tcx+tw/2;
-    bottom = tcy+th/2;
-    LOGE("#### after tracked = ( %f, %f, %f, %f )",left,top,right,bottom);
+    LOGE("#### tracked box size = %fx%f, center = (%f, %f)",tw,th,tcx,tcy);
 
-    env->SetFloatField(rgn, fields.rectf_left_ID, left);
-    env->SetFloatField(rgn, fields.rectf_top_ID, top);
-    env->SetFloatField(rgn, fields.rectf_right_ID, right);
-    env->SetFloatField(rgn, fields.rectf_bottom_ID, bottom);
+    float left, top, right, bottom;
+    if( tw>0 ) {
+        left = tcx-tw/2;
+        right = tcx+tw/2;
+    } else {
+        left = tcx - tracker->getPrevHeight()/2;
+        right = tcx + tracker->getPrevHeight()/2;
+    }
 
-    return;
+    if( th>0 ) {
+        left = tcy-th/2;
+        right = tcy+th/2;
+    } else {
+        top = tcy - tracker->getPrevHeight()/2;
+        bottom = tcy + tracker->getPrevHeight()/2;
+    }
+    LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
+
+	fields.rectfClazz = env->FindClass("android/graphics/RectF");
+    fields.rectfConstructor = env->GetMethodID(fields.rectfClazz, "<init>", "(FFFF)V");
+    return env->NewObject(fields.rectfClazz, fields.rectfConstructor, left, top, right, bottom);
 }
 
 #ifdef __cplusplus

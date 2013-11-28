@@ -46,7 +46,6 @@ public class TargetSettingView extends View {
     
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.i(TAG, "onTouchEvent()");
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN :
                 //mPtStart = new PointF();
@@ -80,8 +79,6 @@ public class TargetSettingView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (mPtStart != null && mPtEnd != null) {
-            Log.i(TAG, "onDraw");
-            
             p.setColor(Color.CYAN);
             canvas.drawRect(mPtStart.x, mPtStart.y, mPtEnd.x, mPtEnd.y, p);
         }
