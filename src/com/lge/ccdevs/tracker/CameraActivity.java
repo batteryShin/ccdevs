@@ -10,6 +10,7 @@ import com.lge.ccdevs.tracker.CameraPreview.IOnDrawTargetListener;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.os.Bundle;
@@ -88,6 +89,12 @@ public class CameraActivity extends Activity {
         mTargetSettingView = (TargetSettingView)mTargetLayer.findViewById(R.id.target_setting_view);
         mTargetView = (TargetView)mTargetLayer.findViewById(R.id.target_view);
         
+        /*Point dispSize = new Point();
+        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+        wm.getDefaultDisplay().getRealSize(dispSize);
+
+        int width = dispSize.x;
+        int height = dispSize.y;*/
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         DisplayMetrics metrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(metrics);
