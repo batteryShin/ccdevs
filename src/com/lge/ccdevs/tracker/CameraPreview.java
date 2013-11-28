@@ -1,6 +1,10 @@
 package com.lge.ccdevs.tracker;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import android.content.Context;
@@ -11,11 +15,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.hardware.Camera;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";;
@@ -35,8 +43,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private static final int FRAME_COUNT = 30;
     private static int mFrameCount = 0;
     private RectF mTargetRect;
+    private RectF mScaledTargetRect;
     private RectF mDetectedRect;
     private Bitmap mPrevBMP;
+    private static int mDispWidth;
+    private static int mDispHeight;
+    private float mScaleX;
+    private float mScaleY;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -88,6 +101,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         
         mDetectedRect = new RectF();
         mTargetRect = new RectF();
+        mScaledTargetRect = new RectF();
+                
+        Point dispSize = new Point();
+        WindowManager wm = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
+        wm.getDefaultDisplay().getRealSize(dispSize);
+
+        mDispWidth = dispSize.x;
+        mDispHeight = dispSize.y;
     }
 
     @Override
@@ -149,7 +170,32 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 //        native_cv_facex(bmp);
         if( mPrevBMP!=null && !mTargetRect.isEmpty()) {
             Log.d(TAG, "native_cv_track call");
-            native_cv_track(mBitmap, mPrevBMP, mTargetRect);
+            mScaledTargetRect.set(mTargetRect.top * mScaleX,
+                                    mTargetRect.left * mScaleY,
+                                    mTargetRect.bottom * mScaleX,
+                                    mTargetRect.right * mScaleY);
+            Log.d(TAG, "target info : (top, left, bottom, right) = ("
+                    + mScaledTargetRect.top + ", " + mScaledTargetRect.left + ", " + mScaledTargetRect.bottom + ", " + mScaledTargetRect.right + ")");
+            
+            String path = Environment.getExternalStorageDirectory().toString();
+            OutputStream fOut = null;
+            File file = new File(path, "sampleimage.jpg");
+            try {
+                fOut = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } finally {
+                mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+                try {
+                    fOut.flush();
+                    fOut.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }                
+            }
+            
+            
+            native_cv_track(mBitmap, mPrevBMP, mScaledTargetRect);
         }
         mPrevBMP = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
         
@@ -239,6 +285,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     
                     params.setPreviewSize(mFrameWidth, mFrameHeight);                
                     mCamera.setParameters(params);
+                    
+                    // camera is 90 degree rotated
+                    mScaleX = (float)mFrameWidth / (float)mDispHeight;
+                    mScaleY = (float)mFrameHeight / (float)mDispWidth;
                     break;
                 }
             }
