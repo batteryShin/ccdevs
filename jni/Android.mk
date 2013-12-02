@@ -37,15 +37,17 @@ LOCAL_SHARED_LIBRARIES += \
 	libandroid_runtime \
     libnativehelper \
 	libdl \
+	libjpeg \
 	libskia
 else # In the NDK build system
-LOCAL_LDLIBS += -L$(REFLIB_PATH) -landroid_runtime -lnativehelper -ldl -lskia
+LOCAL_LDLIBS += -L$(REFLIB_PATH) -landroid_runtime -lnativehelper -ldl -lskia -ljpeg
 endif
 
 ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_C_INCLUDES += \
     $(JNI_H_INCLUDE) \
     libnativehelper/include \
+    external/jpeg \
     external/skia/include \
     $(call include-path-for, corecg graphics)
 else # In the NDK build system
@@ -55,6 +57,7 @@ LOCAL_C_INCLUDES += \
     $(ANDROID_PATH)/frameworks/base/include \
     $(ANDROID_PATH)/libnativehelper/include	\
     $(ANDROID_PATH)/system/core/include \
+	$(REFLIB_PATH)/../jpeg \
 	$(REFLIB_PATH)/../skia/include
 endif
 

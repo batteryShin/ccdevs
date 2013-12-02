@@ -1,6 +1,12 @@
 #include "Tracker.h"
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <sstream>
 
 using namespace std;
+static int n = 0;
 
 Tracker::Tracker(IplImage * pImg, CvRect pFaceRect){
     // File-level variables
@@ -22,6 +28,10 @@ Tracker::Tracker(IplImage * pImg, CvRect pFaceRect){
 
     // Create a new hue image
     updateHueImage(pImg);
+
+    stringstream ss;
+    ss << "/sdcard/hueimg" << n++ << ".jpg";
+
 
     // Create a histogram representation for the face
     cvSetImageROI( pHueImg, pFaceRect );
