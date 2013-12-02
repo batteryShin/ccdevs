@@ -48,7 +48,7 @@ struct fields_t {
 static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
-Tracker *tracker;
+static Tracker *tracker;
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
 (JNIEnv *env, jobject thiz, jobject srcimg, jobject rgn) {
@@ -107,9 +107,11 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
 		return;
 	}
 
-	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
-	memcpy(img->imageData, bPixs, img->imageSize);
+	IplImage* bimg = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(bimg->imageData, bPixs, bimg->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
+    cvCvtColor(bimg, img, CV_RGBA2RGB);
 
     // convert RectF
     float left = env->GetFloatField(rgn, fields.rectf_left_ID);
@@ -119,6 +121,9 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
 
     LOGE("#### assign initial box = ( %f, %f, %f, %f )",left,top,right,bottom);
 	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
+
+    cvReleaseImage( &bimg );
+    cvReleaseImage( &img );
 }
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex
@@ -208,9 +213,11 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 		return 0;
 	}
 
-	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
-	memcpy(img->imageData, bPixs, img->imageSize);
+	IplImage* bimg = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(bimg->imageData, bPixs, bimg->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
+    cvCvtColor(bimg, img, CV_RGBA2RGB);
 
     CvBox2D res_box = tracker->track(img);
 
@@ -225,8 +232,8 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
         left = tcx-tw/2;
         right = tcx+tw/2;
     } else {
-        left = tcx - tracker->getPrevHeight()/2;
-        right = tcx + tracker->getPrevHeight()/2;
+        left = tcx - tracker->getPrevWidth()/2;
+        right = tcx + tracker->getPrevWidth()/2;
     }
 
     if( th>0 ) {
@@ -237,6 +244,9 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
         bottom = tcy + tracker->getPrevHeight()/2;
     }
     LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
+
+    cvReleaseImage( &bimg );
+    cvReleaseImage( &img );
 
 	fields.rectfClazz = env->FindClass("android/graphics/RectF");
     fields.rectfConstructor = env->GetMethodID(fields.rectfClazz, "<init>", "(FFFF)V");

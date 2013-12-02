@@ -23,7 +23,6 @@ endif
 
 #LOCAL_H_INCLUDE:= kpmtypes.h
 LOCAL_SRC_FILES:= \
-	com_lge_ccdevs_tracker_CameraActivity.cpp	\
 	com_lge_ccdevs_tracker_CameraPreview.cpp	\
 	FaceDetector.cpp	\
 	FaceAligner.cpp		\

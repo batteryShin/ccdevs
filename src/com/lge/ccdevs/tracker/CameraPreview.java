@@ -40,7 +40,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean mTargetSet = false;
     
     
+    private static int d = 0;
     private static final int FRAME_COUNT = 15;
+
     private static int mFrameCount = 0;
     private RectF mTargetRect;
     private RectF mScaledTargetRect;
@@ -55,6 +57,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private native final void native_cv_init(Bitmap base_img, RectF rgn);
 	private native final RectF native_cv_track(Bitmap img);
 //	private native final File native_cv_merge(ArrayList<Bitmap> imgs);
+//
+	static public void test_capture(Bitmap img, String fname) {
+        try {
+            FileOutputStream out = new FileOutputStream("/sdcard/"+fname);
+            img.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        } catch (FileNotFoundException e) {
+        }
+    }
 
     static public void decodeYUV420SP(int[] rgb, byte[] yuv420sp, int width, int height) {
         final int frameSize = width * height;
@@ -170,8 +180,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         if( mTargetSet ) {
             Log.i(TAG, "native_cv_track() call");
             mScaledTargetRect = native_cv_track(mBitmap);
-            Log.i(TAG, "scaled rect : (top, left, bottom, right) = "
-                    + mScaledTargetRect.top + ", " + mScaledTargetRect.left + ", " + mScaledTargetRect.bottom + ", " + mScaledTargetRect.right);
+
+            test_capture(mBitmap, "capture"+d+".jpg");
+            d++;
+
+
+            Log.i(TAG, "scaled rect = ("
+                    + mScaledTargetRect.left + ", " + mScaledTargetRect.top + ") - (" + mScaledTargetRect.right + ", " + mScaledTargetRect.bottom + ")");
         }
         
         // get detected rect and put it in mDetectedRect
@@ -179,10 +194,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                             mScaledTargetRect.left / mScaleY,
                             mScaledTargetRect.bottom / mScaleX,
                             mScaledTargetRect.right / mScaleY);
-        Log.i(TAG, "draw rect = ( " + mDetectedRect.left + 
-                    ", " + mDetectedRect.top + 
-                    ", " + mDetectedRect.right + 
-                    ", " + mDetectedRect.bottom + " )");
+        Log.i(TAG, "draw rect = (" + mDetectedRect.left + 
+                    ", " + mDetectedRect.top + ") - (" + 
+                    mDetectedRect.right + ", " + mDetectedRect.bottom + ")");
         mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
 
         return;
@@ -269,7 +283,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     mScaleX = (float)mFrameWidth / (float)mDispHeight;
                     mScaleY = (float)mFrameHeight / (float)mDispWidth;
                     Log.i(TAG, "scaling param = " + mScaleX + ", " + mScaleY);
-                    break;
+                    if( mScaleX==mScaleY )
+                        break;
                 }
             }
         }
@@ -288,10 +303,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         float top = mScaledTargetRect.top;
         float left = mScaledTargetRect.left;
+        float right = mScaledTargetRect.right;
         float bottom = mScaledTargetRect.bottom;
-        float right = mScaledTargetRect.right;        
         Log.i(TAG, "target region = (" + top + ", " + left + 
-                    ", " + bottom + ", " + right + ")");
+                    ") - (" + right + ", " + bottom + ")");
         mTargetSet = true;
     }
 }

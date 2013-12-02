@@ -50,11 +50,8 @@ public class CameraActivity extends Activity {
     static {
 //        System.loadLibrary("Tracker_jni");
 		System.load("/data/data/com.lge.ccdevs.tracker/lib/libTracker_jni.so");
-        native_init();
     }
 
-    private static native final void native_init();
-    
     private IOnDrawTargetListener mOnDrawTargetListener = new IOnDrawTargetListener() {
         @Override
         public void onDrawTarget(RectF target) {
