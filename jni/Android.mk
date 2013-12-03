@@ -12,8 +12,7 @@ LOCAL_C_INCLUDES += 					\
 	$(OPENCV_PATH)/cxcore/include		\
 	$(OPENCV_PATH)/cvaux/include		\
 	$(OPENCV_PATH)/ml/include			\
-	$(OPENCV_PATH)/otherlibs/highgui	\
-	$(REFLIB_PATH)/../jpeg
+	$(OPENCV_PATH)/otherlibs/highgui
 
 ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_STATIC_LIBRARIES += libcxcore libcv libcvaux libcvml libcvhighgui libopencv
@@ -30,7 +29,8 @@ LOCAL_SRC_FILES:= \
 	Vec2d.cpp			\
 	Vec3d.cpp			\
 	Homography.cpp		\
-	Warping.cpp
+	Warping.cpp			\
+	Converter.cpp
 
 ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_SHARED_LIBRARIES += \

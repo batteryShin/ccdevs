@@ -181,8 +181,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.i(TAG, "native_cv_track() call");
             mScaledTargetRect = native_cv_track(mBitmap);
 
-            test_capture(mBitmap, "capture"+d+".jpg");
-            d++;
+//            test_capture(mBitmap, "capture"+d+".jpg");
+//            d++;
 
 
             Log.i(TAG, "scaled rect = ("

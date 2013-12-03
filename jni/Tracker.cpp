@@ -1,12 +1,8 @@
 #include "Tracker.h"
-#include <cstdlib>
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <sstream>
+#include "Converter.h"
 
 using namespace std;
-static int n = 0;
+static int nid = 0;
 
 Tracker::Tracker(IplImage * pImg, CvRect pFaceRect){
     // File-level variables
@@ -26,11 +22,9 @@ Tracker::Tracker(IplImage * pImg, CvRect pFaceRect){
 
     float maxVal = 0.f;
 
+
     // Create a new hue image
     updateHueImage(pImg);
-
-    stringstream ss;
-    ss << "/sdcard/hueimg" << n++ << ".jpg";
 
 
     // Create a histogram representation for the face
@@ -42,10 +36,9 @@ Tracker::Tracker(IplImage * pImg, CvRect pFaceRect){
     cvResetImageROI( pHueImg );
     cvResetImageROI( pMask );
 
+
     // Store the previous face location
     prevFaceRect = pFaceRect;
-
-
 }
 
 
@@ -75,9 +68,40 @@ CvBox2D Tracker::track(IplImage * pImg)
 {
     CvConnectedComp components;
 
+/*
+    // test start
+    stringstream ss;
+    ss << "/sdcard/tracker" << nid++;
+
+    IplImage* tmpimg = cvCreateImage( cvGetSize(pHueImg), 8, 4 );
+    cvCvtColor(pImg, tmpimg, CV_BGR2BGRA);
+
+	SkBitmap* bitmap = new SkBitmap;
+	bitmap->setConfig(SkBitmap::kARGB_8888_Config, pHueImg->width, pHueImg->height);
+    char *p;
+    if( bitmap->allocPixels() ) {
+        p = (char *)bitmap->getPixels();
+        memcpy( p, tmpimg->imageData, tmpimg->imageSize );
+	}
+    saveSkBitmapToBMPFile(*bitmap, ss.str().c_str());
+    // test end
+*/
 
     updateHueImage(pImg);
 
+/*
+    // test start
+    ss << "_update";
+    cvCvtColor(pHueImg, tmpimg, CV_GRAY2BGRA);
+
+    memcpy( p, tmpimg->imageData, tmpimg->imageSize );
+    saveSkBitmapToBMPFile(*bitmap, ss.str().c_str());
+
+    cvReleaseImage( &tmpimg );
+    delete bitmap;
+//    cvSaveImage(ss.str().c_str(), &pHueImg);
+    // test end
+*/
 
     cvCalcBackProject( &pHueImg, pProbImg, pHist );
     cvAnd( pProbImg, pMask, pProbImg, 0 );
@@ -100,3 +124,4 @@ float Tracker::getPrevWidth() {
 float Tracker::getPrevHeight() {
     return prevFaceRect.height;
 }
+

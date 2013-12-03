@@ -20,6 +20,7 @@
 #include "FaceDetector.h"
 #include "FaceAligner.h"
 #include "Tracker.h"
+#include "Converter.h"
 
 #define TAG_DEBUG "CameraPreview-JNI"
 
@@ -49,6 +50,7 @@ static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
 static Tracker *tracker;
+static int ntimes = 0; 
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
 (JNIEnv *env, jobject thiz, jobject srcimg, jobject rgn) {
@@ -110,8 +112,17 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
 	IplImage* bimg = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
 	memcpy(bimg->imageData, bPixs, bimg->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
+
+
+    // test capture
+    Converter::saveCVIMG("/sdcard/cv_init.bmp", bimg);
+    
+
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
-    cvCvtColor(bimg, img, CV_RGBA2RGB);
+    cvCvtColor(bimg, img, CV_BGRA2BGR);
+
+    // test capture
+    Converter::saveCVIMG("/sdcard/cv_init_cvt.bmp", img);
 
     // convert RectF
     float left = env->GetFloatField(rgn, fields.rectf_left_ID);
@@ -217,7 +228,7 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 	memcpy(bimg->imageData, bPixs, bimg->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
-    cvCvtColor(bimg, img, CV_RGBA2RGB);
+    cvCvtColor(bimg, img, CV_BGRA2BGR);
 
     CvBox2D res_box = tracker->track(img);
 
