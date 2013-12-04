@@ -1,6 +1,19 @@
+#include <stdio.h>
+
 #include <cv.h>
 #include <cxcore.h>
 #include <core/SkBitmap.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <jpeglib.h>
+#include <setjmp.h>
+#ifdef __cplusplus
+}
+#endif
+
+#include <kpmtypes.h>
 
 #include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -19,4 +32,7 @@ class Converter{
 public:
     static void saveCVIMG(const char* path, const IplImage* cvimg);
     static void saveSkBitmapToBMPFile(const SkBitmap& skBitmap, const char* path);
+
+    static IplImage* loadJPG(const char* filename);
+    static bool saveJPG(const char* filename, IplImage* cvimg);
 };

@@ -35,7 +35,7 @@ LOCAL_SRC_FILES:= \
 ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_SHARED_LIBRARIES += \
 	libandroid_runtime \
-    libnativehelper \
+	libnativehelper \
 	libdl \
 	libjpeg \
 	libskia
@@ -45,23 +45,23 @@ endif
 
 ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_C_INCLUDES += \
-    $(JNI_H_INCLUDE) \
-    libnativehelper/include \
-    external/jpeg \
-    external/skia/include \
-    $(call include-path-for, corecg graphics)
+	$(JNI_H_INCLUDE) \
+	libnativehelper/include \
+	external/jpeg \
+	external/skia/include \
+	$(call include-path-for, corecg graphics)
 else # In the NDK build system
 LOCAL_C_INCLUDES += \
 	$(ANDROID_PATH)/frameworks/native/include \
 	$(ANDROID_PATH)/frameworks/native/opengl/include \
-    $(ANDROID_PATH)/frameworks/base/include \
-    $(ANDROID_PATH)/libnativehelper/include	\
-    $(ANDROID_PATH)/system/core/include \
+	$(ANDROID_PATH)/frameworks/base/include \
+	$(ANDROID_PATH)/libnativehelper/include	\
+	$(ANDROID_PATH)/system/core/include \
 	$(REFLIB_PATH)/../jpeg \
 	$(REFLIB_PATH)/../skia/include
 endif
 
-LOCAL_CFLAGS := -DANDROID_NDK -g -O0
+LOCAL_CFLAGS := -DANDROID_NDK -g -O0 -DNDK_DEBUG
 LOCAL_LDFLAGS += -fuse-ld=bfd -llog -ljnigraphics
 #LOCAL_LDLIBS :=
 

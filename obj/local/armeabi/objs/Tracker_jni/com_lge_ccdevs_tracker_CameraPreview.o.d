@@ -165,7 +165,9 @@ obj/local/armeabi/objs/Tracker_jni/com_lge_ccdevs_tracker_CameraPreview.o: \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_range_errors.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_bvector.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h \
- jni/Tracker.h
+ jni/Tracker.h jni/Converter.h jni/../libs/prebuilt/../jpeg/jpeglib.h \
+ jni/../libs/prebuilt/../jpeg/jconfig.h \
+ jni/../libs/prebuilt/../jpeg/jmorecfg.h
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h:
 
@@ -506,3 +508,11 @@ jni/kpmtypes.h:
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h:
 
 jni/Tracker.h:
+
+jni/Converter.h:
+
+jni/../libs/prebuilt/../jpeg/jpeglib.h:
+
+jni/../libs/prebuilt/../jpeg/jconfig.h:
+
+jni/../libs/prebuilt/../jpeg/jmorecfg.h:

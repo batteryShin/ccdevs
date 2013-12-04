@@ -58,7 +58,86 @@ obj/local/armeabi/objs/Tracker_jni/Tracker.o: jni/Tracker.cpp \
  jni/../libs/opencv/cv/include/cvtypes.h \
  jni/../libs/opencv/cv/include/cv.hpp \
  jni/../libs/opencv/cv/include/cvcompat.h \
- jni/../libs/opencv/otherlibs/highgui/highgui.h
+ jni/../libs/opencv/otherlibs/highgui/highgui.h jni/Converter.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/stdio.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdarg.h \
+ jni/../libs/prebuilt/../skia/include/core/SkBitmap.h \
+ jni/../libs/prebuilt/../skia/include/core/Sk64.h \
+ jni/../libs/prebuilt/../skia/include/core/SkFixed.h \
+ jni/../libs/prebuilt/../skia/include/core/SkTypes.h \
+ jni/../libs/prebuilt/../skia/include/core/SkPreConfig.h \
+ jni/../libs/prebuilt/../skia/include/core/SkUserConfig.h \
+ jni/../libs/android/frameworks/native/include/utils/misc.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/sys/time.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/linux/time.h \
+ jni/../libs/android/frameworks/native/include/utils/Endian.h \
+ jni/../libs/prebuilt/../skia/include/core/SkPostConfig.h \
+ jni/../libs/prebuilt/../skia/include/core/SkColor.h \
+ jni/../libs/prebuilt/../skia/include/core/SkScalar.h \
+ jni/../libs/prebuilt/../skia/include/core/SkFloatingPoint.h \
+ jni/../libs/prebuilt/../skia/include/core/SkFloatBits.h \
+ jni/../libs/prebuilt/../skia/include/core/SkPoint.h \
+ jni/../libs/prebuilt/../skia/include/core/SkMath.h \
+ jni/../libs/prebuilt/../skia/include/core/SkRefCnt.h \
+ jni/../libs/prebuilt/../skia/include/core/SkThread.h \
+ jni/../libs/prebuilt/../skia/include/core/SkThread_platform.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/pthread.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_prolog.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/pthread.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/time.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/time.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/siginfo.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm-generic/siginfo.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/signal.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/signal.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/signal.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm-generic/signal.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/sigcontext.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/sched.h \
+ jni/../libs/prebuilt/../jpeg/jpeglib.h \
+ jni/../libs/prebuilt/../jpeg/jconfig.h \
+ jni/../libs/prebuilt/../jpeg/jmorecfg.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/setjmp.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/setjmp.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/machine/setjmp.h \
+ jni/kpmtypes.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/debug/_debug.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_algobase.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstddef.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstring.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/using/cstring \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/climits \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstdlib.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cmath.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_pair.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/type_traits.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/type_manips.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_move_construct_fwk.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_iterator_base.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_ptrs_specialize.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_algobase.c \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_function_base.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_iterator.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_alloc.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_new.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/new \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstddef \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/cstddef \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/exception \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/exception \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/gabixx_config.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstdio.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_construct.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_alloc.c \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_uninitialized.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.c \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_range_errors.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_bvector.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/android/log.h
 
 jni/Tracker.h:
 
@@ -181,3 +260,163 @@ jni/../libs/opencv/cv/include/cv.hpp:
 jni/../libs/opencv/cv/include/cvcompat.h:
 
 jni/../libs/opencv/otherlibs/highgui/highgui.h:
+
+jni/Converter.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/stdio.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdarg.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkBitmap.h:
+
+jni/../libs/prebuilt/../skia/include/core/Sk64.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkFixed.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkTypes.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkPreConfig.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkUserConfig.h:
+
+jni/../libs/android/frameworks/native/include/utils/misc.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/sys/time.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/linux/time.h:
+
+jni/../libs/android/frameworks/native/include/utils/Endian.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkPostConfig.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkColor.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkScalar.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkFloatingPoint.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkFloatBits.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkPoint.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkMath.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkRefCnt.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkThread.h:
+
+jni/../libs/prebuilt/../skia/include/core/SkThread_platform.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/pthread.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_prolog.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/pthread.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/time.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/time.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/siginfo.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm-generic/siginfo.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/signal.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/signal.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/signal.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm-generic/signal.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/asm/sigcontext.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/sched.h:
+
+jni/../libs/prebuilt/../jpeg/jpeglib.h:
+
+jni/../libs/prebuilt/../jpeg/jconfig.h:
+
+jni/../libs/prebuilt/../jpeg/jmorecfg.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/setjmp.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/setjmp.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/machine/setjmp.h:
+
+jni/kpmtypes.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/debug/_debug.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_algobase.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstddef.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstring.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/using/cstring:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/climits:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstdlib.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cmath.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_pair.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/type_traits.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/type_manips.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_move_construct_fwk.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_iterator_base.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_ptrs_specialize.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_algobase.c:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_function_base.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_iterator.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_alloc.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_new.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/new:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstddef:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/cstddef:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/exception:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/exception:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/../../gabi++/include/gabixx_config.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cstdio.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_construct.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_alloc.c:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_uninitialized.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.c:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_range_errors.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_bvector.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/android/log.h:
