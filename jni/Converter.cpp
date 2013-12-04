@@ -218,6 +218,8 @@ bool Converter::saveJPG(const char* filename, IplImage* cvimg)
     int row_stride;		/* physical row width in image buffer */
     JSAMPARRAY buffer;		/* Output row buffer */
 
+    IplImage* simg;
+
     /* Step 1: allocate and initialize JPEG compression object */
 
     /* We have to set up the error handler first, in case the initialization
@@ -250,12 +252,19 @@ bool Converter::saveJPG(const char* filename, IplImage* cvimg)
      */
     cinfo.image_width = cvimg->width; 	// image width and height, in pixels
     cinfo.image_height = cvimg->height;
-    if(cvimg->nChannels == 1)
+
+    if(cvimg->nChannels==1)
     {
         cinfo.input_components = 1; 	// # of color components per pixel
         cinfo.in_color_space = JCS_GRAYSCALE; 	/* colorspace of input image */
         bGray = true;
     } else {
+        simg = cvCreateImage(cvGetSize(cvimg),8,3);
+        if( cvimg->nChannels==3 ) {
+            cvCopy(cvimg, simg);
+        } else if( cvimg->nChannels==4 ) { 
+            cvCvtColor(cvimg,simg,CV_RGBA2BGR);
+        }
         cinfo.input_components = 3; 	// # of color components per pixel
         cinfo.in_color_space = JCS_RGB; 	/* colorspace of input image */
     }
@@ -303,12 +312,10 @@ bool Converter::saveJPG(const char* filename, IplImage* cvimg)
             (void) jpeg_write_scanlines(&cinfo, buffer, 1);
         }
     } else {
-        RgbImage ptrColor(cvimg);
+        RgbImage ptrColor(simg);
 
-        while (cinfo.next_scanline < cinfo.image_height) 
-        {
-            for(col=0, i=0 ; i<row_stride ; col++, i+=3)
-            {
+        while (cinfo.next_scanline < cinfo.image_height) {
+            for(col=0, i=0 ; i<row_stride ; col++, i+=3) {
                 buffer[0][i] = ptrColor[line][col].r;
                 buffer[0][i+1] = ptrColor[line][col].g;
                 buffer[0][i+2] = ptrColor[line][col].b;
@@ -317,6 +324,7 @@ bool Converter::saveJPG(const char* filename, IplImage* cvimg)
             (void) jpeg_write_scanlines(&cinfo, buffer, 1);
         }
 
+        cvReleaseImage(&simg);
     }
 
     /* Step 6: Finish compression */
@@ -338,10 +346,10 @@ void Converter::saveCVIMG(const char* path, const IplImage* cvimg) {
     LOGI("saveCVIMG:: %d channels", nchs);
     switch(nchs) {
         case 1:
-            cvCvtColor(cvimg, img, CV_GRAY2BGRA);
+            cvCvtColor(cvimg, img, CV_GRAY2RGBA);
             break;
         case 3:
-            cvCvtColor(cvimg, img, CV_BGR2BGRA);
+            cvCvtColor(cvimg, img, CV_BGR2RGBA);
             break;
         case 4:
             cvCopy(cvimg, img);

@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <sstream>
+
 //#include <utils/threads.h>
 //#include <utils/Log.h>
 //#include <utils/Errors.h>  // for status_t
@@ -50,7 +52,7 @@ static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
 static Tracker *tracker;
-static int ntimes = 0; 
+static int ncount = 0;
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
 (JNIEnv *env, jobject thiz, jobject srcimg, jobject rgn) {
@@ -114,15 +116,11 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
 	AndroidBitmap_unlockPixels(env, srcimg);
 
 
-    // test capture
-    Converter::saveCVIMG("/sdcard/cv_init.bmp", bimg);
-    
-
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
-    cvCvtColor(bimg, img, CV_BGRA2BGR);
+    cvCvtColor(bimg, img, CV_RGBA2BGR);
 
     // test capture
-    Converter::saveCVIMG("/sdcard/cv_init_cvt.bmp", img);
+//    Converter::saveJPG("/sdcard/cv_init.jpg", img);
 
     // convert RectF
     float left = env->GetFloatField(rgn, fields.rectf_left_ID);
@@ -228,8 +226,18 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 	memcpy(bimg->imageData, bPixs, bimg->imageSize);
 	AndroidBitmap_unlockPixels(env, srcimg);
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
-    cvCvtColor(bimg, img, CV_BGRA2BGR);
+    cvCvtColor(bimg, img, CV_RGBA2BGR);
 
+    /* test capture
+    stringstream ss;
+    ss << "/sdcard/cv_track_4ch" << ncount << ".jpg";
+    Converter::saveJPG(ss.str().c_str(), bimg);
+
+    stringstream ss2;
+    ss2 << "/sdcard/cv_track_3ch" << ncount++ << ".jpg";
+    Converter::saveJPG(ss2.str().c_str(), img);
+    *////
+    
     CvBox2D res_box = tracker->track(img);
 
     float tw = res_box.size.width;

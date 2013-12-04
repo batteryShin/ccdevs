@@ -38,10 +38,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     SurfaceHolder               holder;
     private boolean mRun = false;
     private boolean mTargetSet = false;
-    
+    private boolean  mCVInitialized = false;
     
     private static int d = 0;
-    private static final int FRAME_COUNT = 15;
+    private static final int FRAME_COUNT = 5;
 
     private static int mFrameCount = 0;
     private RectF mTargetRect;
@@ -178,11 +178,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // native process using opencv
 //        native_cv_facex(bmp);
         if( mTargetSet ) {
+            if( !mCVInitialized ) {
+                Log.i(TAG, "native_cv_init() call");
+                native_cv_init(mBitmap, mScaledTargetRect);
+                mCVInitialized = true;
+                return;
+            }
+//            test_capture(mBitmap, "capture"+ (d++) +".jpg");
             Log.i(TAG, "native_cv_track() call");
             mScaledTargetRect = native_cv_track(mBitmap);
 
-//            test_capture(mBitmap, "capture"+d+".jpg");
-//            d++;
 
 
             Log.i(TAG, "scaled rect = ("
@@ -297,9 +302,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                                 mTargetRect.left * mScaleY,
                                 mTargetRect.bottom * mScaleX,
                                 mTargetRect.right * mScaleY);
-        
-        Log.i(TAG, "native_cv_init() call");
-        native_cv_init(mBitmap, mScaledTargetRect);
 
         float top = mScaledTargetRect.top;
         float left = mScaledTargetRect.left;
