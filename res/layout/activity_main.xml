@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,12 +6,103 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context=".MainActivity" >
-
-    <Button
-        android:layout_width="wrap_content"
+    
+    <!--  Server Mode -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="start"
-        android:id="@+id/btn_start" />
-
-</RelativeLayout>
+        android:background="#D4EEEB"
+        android:orientation="vertical" >
+	    <TextView
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:background="#7CDCF5"
+	        android:text="Watcher Mode" />
+	    <TextView
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:text=""
+	        android:id="@+id/text_ip" />
+	    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Server Status:"
+            android:id="@+id/text_status" />
+	</LinearLayout>
+    
+    <!--  Client Mode -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+	    <TextView
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:background="#7CDCF5"
+	        android:text="Target Mode" />
+	    <LinearLayout
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:background="#D4EEEB" >
+	        <TextView
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="Server IP : " />
+	        <EditText
+	            android:id="@+id/server_ip"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"
+	            android:text="" />      
+	        <Button
+	            android:id="@+id/connect_phones"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="connect" />
+	    </LinearLayout>
+	    <EditText
+	        android:id="@+id/message"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:text="hello~" />
+	    <Button
+	        android:id="@+id/send_msg"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:text="Send" />
+	</LinearLayout>
+    
+    <!-- Select Mode -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:gravity="bottom" >
+	    <TextView
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:background="#7CDCF5"
+	        android:text="Select Mode: Start as.." />
+	    
+	    <LinearLayout
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal" >
+	        <Button
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"
+	            android:text="Watcher"
+	            android:id="@+id/btn_watcher" />        
+	        <Button
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"
+	            android:text="Target"
+	            android:id="@+id/btn_target" />
+	    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
