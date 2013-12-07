@@ -184,8 +184,8 @@ public class TrackerServer extends Service {
         mNM.notify(R.layout.activity_main, builder.build());
     }
     
-    final Messenger mMessenger = new Messenger() {
-        
-    };
+//    final Messenger mMessenger = new Messenger() {
+//        
+//    };
 
 }
