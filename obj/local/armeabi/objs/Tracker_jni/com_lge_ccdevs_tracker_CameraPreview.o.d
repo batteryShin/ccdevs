@@ -205,17 +205,26 @@ obj/local/armeabi/objs/Tracker_jni/com_lge_ccdevs_tracker_CameraPreview.o: \
  jni/../libs/android/system/core/include/cutils/log.h \
  jni/../libs/android/system/core/include/cutils/uio.h \
  jni/../libs/android/system/core/include/cutils/logd.h \
- jni/com_lge_ccdevs_tracker_CameraPreview.h jni/FaceDetector.h \
- jni/FaceAligner.h jni/Homography.h jni/Vec2d.h jni/Warping.h \
- jni/kpmtypes.h \
+ jni/com_lge_ccdevs_tracker_CameraPreview.h jni/facedetect/FaceDetector.h \
+ jni/facedetect/FaceAligner.h jni/facedetect/Homography.h \
+ jni/facedetect/Vec2d.h jni/facedetect/Warping.h \
+ jni/facedetect/kpmtypes.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_vector.c \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_bvector.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h \
- jni/Tracker.h jni/Converter.h jni/../libs/prebuilt/../jpeg/jpeglib.h \
+ jni/tracking/Tracker.h jni/tracking/Converter.h \
+ jni/../libs/prebuilt/../jpeg/jpeglib.h \
  jni/../libs/prebuilt/../jpeg/jconfig.h \
- jni/../libs/prebuilt/../jpeg/jmorecfg.h
+ jni/../libs/prebuilt/../jpeg/jmorecfg.h jni/facedetect/kpmtypes.h \
+ jni/matching/Matcher.h jni/matching/KeyPointMatch.h \
+ jni/matching/kpmtypes.h jni/matching/AnnMatch.h jni/matching/ANN/ANN.h \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstdlib \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cmath \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/iostream \
+ /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstring \
+ jni/matching/Homography.h jni/matching/HomographyEst.h
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h:
 
@@ -629,17 +638,17 @@ jni/../libs/android/system/core/include/cutils/logd.h:
 
 jni/com_lge_ccdevs_tracker_CameraPreview.h:
 
-jni/FaceDetector.h:
+jni/facedetect/FaceDetector.h:
 
-jni/FaceAligner.h:
+jni/facedetect/FaceAligner.h:
 
-jni/Homography.h:
+jni/facedetect/Homography.h:
 
-jni/Vec2d.h:
+jni/facedetect/Vec2d.h:
 
-jni/Warping.h:
+jni/facedetect/Warping.h:
 
-jni/kpmtypes.h:
+jni/facedetect/kpmtypes.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector:
 
@@ -651,12 +660,36 @@ jni/kpmtypes.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h:
 
-jni/Tracker.h:
+jni/tracking/Tracker.h:
 
-jni/Converter.h:
+jni/tracking/Converter.h:
 
 jni/../libs/prebuilt/../jpeg/jpeglib.h:
 
 jni/../libs/prebuilt/../jpeg/jconfig.h:
 
 jni/../libs/prebuilt/../jpeg/jmorecfg.h:
+
+jni/facedetect/kpmtypes.h:
+
+jni/matching/Matcher.h:
+
+jni/matching/KeyPointMatch.h:
+
+jni/matching/kpmtypes.h:
+
+jni/matching/AnnMatch.h:
+
+jni/matching/ANN/ANN.h:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstdlib:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cmath:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/iostream:
+
+/cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/cstring:
+
+jni/matching/Homography.h:
+
+jni/matching/HomographyEst.h:

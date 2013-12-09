@@ -1,5 +1,5 @@
 obj/local/armeabi/objs/Tracker_jni/Converter.o: jni/Converter.cpp \
- jni/Converter.h \
+ jni/tracking/Converter.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_cprolog.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/config/features.h \
@@ -101,7 +101,7 @@ obj/local/armeabi/objs/Tracker_jni/Converter.o: jni/Converter.cpp \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/setjmp.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/../include/setjmp.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/machine/setjmp.h \
- jni/kpmtypes.h \
+ jni/facedetect/kpmtypes.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/debug/_debug.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_algobase.h \
@@ -139,7 +139,7 @@ obj/local/armeabi/objs/Tracker_jni/Converter.o: jni/Converter.cpp \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stl/_relops_cont.h \
  /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/android/log.h
 
-jni/Converter.h:
+jni/tracking/Converter.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/stdio.h:
 
@@ -343,7 +343,7 @@ jni/../libs/prebuilt/../jpeg/jmorecfg.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/platforms/android-17/arch-arm/usr/include/machine/setjmp.h:
 
-jni/kpmtypes.h:
+jni/facedetect/kpmtypes.h:
 
 /cygdrive/d/android-sdk-windows/android-ndk-r9b/sources/cxx-stl/stlport/stlport/vector:
 

@@ -19,10 +19,10 @@
 #include <nativehelper/JNIHelp.h>
 
 #include "com_lge_ccdevs_tracker_CameraPreview.h"
-#include "FaceDetector.h"
-#include "FaceAligner.h"
-#include "Tracker.h"
-#include "Converter.h"
+#include <FaceDetector.h>
+#include <FaceAligner.h>
+#include <Tracker.h>
+#include <Matcher.h>
 
 #define TAG_DEBUG "CameraPreview-JNI"
 
@@ -51,7 +51,8 @@ struct fields_t {
 static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
-static Tracker *tracker;
+//static Tracker *tracker;
+static Matcher *matcher;
 static int ncount = 0;
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
@@ -129,7 +130,8 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
     float bottom = env->GetFloatField(rgn, fields.rectf_bottom_ID);
 
     LOGE("#### assign initial box = ( %f, %f, %f, %f )",left,top,right,bottom);
-	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
+//	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
+	matcher = new Matcher(img, cvRect(left,top,right-left,bottom-top));
 
     cvReleaseImage( &bimg );
     cvReleaseImage( &img );
@@ -238,15 +240,17 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
     Converter::saveJPG(ss2.str().c_str(), img);
     *////
     
-    CvBox2D res_box = tracker->track(img);
+//    CvBox2D res_box = tracker->track(img);
+//    LOGE("#### tracked box size = %fx%f, center = (%f, %f)",tw,th,tcx,tcy);
+    CvRect res_rt = matcher->match(img);
 
-    float tw = res_box.size.width;
-    float th = res_box.size.height;
-    float tcx = res_box.center.x;
-    float tcy = res_box.center.y;
-    LOGE("#### tracked box size = %fx%f, center = (%f, %f)",tw,th,tcx,tcy);
+    float tw = res_rt.width;
+    float th = res_rt.height;
+    float tx = res_rt.x;
+    float ty = res_rt.y;
 
     float left, top, right, bottom;
+/*
     if( tw>0 ) {
         left = tcx-tw/2;
         right = tcx+tw/2;
@@ -263,7 +267,12 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
         bottom = tcy + tracker->getPrevHeight()/2;
     }
     LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
-
+*/
+    left = tx;
+    top = ty;
+    right = tx+tw;
+    bottom = ty+th;
+    LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
     cvReleaseImage( &bimg );
     cvReleaseImage( &img );
 
