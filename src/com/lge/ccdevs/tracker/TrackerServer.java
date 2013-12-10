@@ -68,16 +68,11 @@ public class TrackerServer extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-                       
-        
-        //serverStatus = (TextView) findViewById(R.id.server_status);
-        //clientMsg = (TextView) findViewById(R.id.message);
-        SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");//getLocalIpAddress();
+        SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");
                 
         Thread fst = new Thread(new ServerThread());
         fst.start();
-                
-        //return super.onStartCommand(intent, flags, startId);
+
         return START_STICKY;
     }
     
@@ -104,7 +99,6 @@ public class TrackerServer extends Service {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            //serverStatus.setText("Listening on IP: " + SERVERIP);
                             Toast.makeText(mContext, "Listening on IP: " + SERVERIP, Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -115,7 +109,6 @@ public class TrackerServer extends Service {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                //serverStatus.setText("Connected.");
                                 Toast.makeText(mContext, "Connected..", Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -140,7 +133,6 @@ public class TrackerServer extends Service {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    //serverStatus.setText("Oops. Connection interrupted. Please reconnect your phones.");
                                     Toast.makeText(mContext, "Oops. Connection interrupted. Please reconnect your phones.", Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -151,7 +143,6 @@ public class TrackerServer extends Service {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            //serverStatus.setText("Couldn't detect internet connection.");
                             Toast.makeText(mContext, "Couldn't detect internet connection.", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -160,7 +151,6 @@ public class TrackerServer extends Service {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        //serverStatus.setText("Error");
                         Toast.makeText(mContext, "Error!!", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -174,6 +164,7 @@ public class TrackerServer extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
         
         builder.setSmallIcon(iconId)
+            .setAutoCancel(true)
             .setContentTitle("title")
             .setContentInfo("info")
             .setContentText(msg)
@@ -183,9 +174,4 @@ public class TrackerServer extends Service {
         builder.setContentIntent(pi);
         mNM.notify(R.layout.activity_main, builder.build());
     }
-    
-//    final Messenger mMessenger = new Messenger() {
-//        
-//    };
-
 }
