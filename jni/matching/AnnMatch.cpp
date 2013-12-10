@@ -68,6 +68,10 @@ void CAnnMatch::Match(std::vector<FeatureVector>& fv)
 	int dim = FEATURE_DIM;      // dimension
 	double eps = 0;             // error bound
 
+    if( !m_kdTree ) {
+        return;
+    }
+
 	// 아래 선언은 double* point; 와 완전히 동일하다. 
 	ANNpoint point = annAllocPt(dim);       // allocate query point
 	ANNidxArray  nnidx = new ANNidx[k];     // allocate near neigh indices
@@ -122,7 +126,7 @@ void CAnnMatch::Construct(std::vector<SURFfV>& fv)
 	// 아래 선언은 double** points; 와 완전히 동일하다.
 	m_refpts = annAllocPts(num, dim); // allocate data points
 
-	std::vector<SURFfV>::iterator iter;
+    std::vector<SURFfV>::iterator iter;
 	SURFfV surf;
 
 	int i = 0;
@@ -147,6 +151,10 @@ void CAnnMatch::Match(std::vector<SURFfV>& fv)
 	int dim = SURF_FEATURE_DIM;      // dimension
 	double eps = 0;             // error bound
 
+    if( !m_kdTree ) {
+        return;
+    }
+
 	// 아래 선언은 double* point; 와 완전히 동일하다. 
 	ANNpoint point = annAllocPt(dim);       // allocate query point
 	ANNidxArray  nnidx = new ANNidx[k];     // allocate near neigh indices
@@ -155,7 +163,7 @@ void CAnnMatch::Match(std::vector<SURFfV>& fv)
 	// Initializes
 	m_match.clear();
 
-	std::vector<SURFfV>::iterator iter;
+    std::vector<SURFfV>::iterator iter;
 
 	for( iter = fv.begin() ; iter != fv.end() ; ++iter )
 	{

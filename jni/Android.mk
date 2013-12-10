@@ -40,11 +40,13 @@ ifdef HISTORICAL_NDK_VERSIONS_ROOT # In the platform build system
 LOCAL_SHARED_LIBRARIES +=	\
 	libandroid_runtime	\
 	libnativehelper	\
+	libc	\
+	libm	\
 	libdl	\
 	libjpeg	\
 	libskia
 else # In the NDK build system
-LOCAL_LDLIBS += -L$(REFLIB_PATH) -landroid_runtime -lnativehelper -ldl -lskia -ljpeg
+LOCAL_LDLIBS += -L$(REFLIB_PATH) -landroid_runtime -lnativehelper -lc -lm -ldl -lskia -ljpeg
 endif
 
 LOCAL_LDLIBS += -L$(REFLIB_PATH) -lANN
@@ -70,7 +72,7 @@ LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/matching
 endif
 
-LOCAL_CFLAGS := -DANDROID_NDK -g -O0 -DNDK_DEBUG
+LOCAL_CFLAGS := -DANDROID_NDK -g -O0
 LOCAL_LDFLAGS += -fuse-ld=bfd -llog -ljnigraphics
 
 #LOCAL_PRELINK_MODULE := false

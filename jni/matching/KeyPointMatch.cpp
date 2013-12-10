@@ -48,18 +48,10 @@ void CKeyPointMatch::Init()
 {
 	register int n, i;
 
-    if( m_img2 ) {
-    	cvReleaseImage(&m_img2);
-    }
-
 	m_fltimg = NULL;
 
 	for(n=0; n<OBJECTNUM; n++)
 	{
-        if( m_img1[n] ) {
-            cvReleaseImage(&m_img1[n]);
-        }
-
 		m_CorspMap[n].clear();
 		m_InlierMap[n].clear();
 
@@ -106,15 +98,7 @@ void CKeyPointMatch::SetReferImageSURF(CvPoint* pts, IplImage* img, int nObj)
 //	vector<SURFfV> features2;
 	SURFfV fv;
 
-    CvMat* contour = cvCreateMat(4,2,CV_8UC1);
-    cvmSet(contour,0,0,pts[0].x);
-    cvmSet(contour,0,1,pts[0].y);
-    cvmSet(contour,1,0,pts[1].x);
-    cvmSet(contour,1,1,pts[1].y);
-    cvmSet(contour,2,0,pts[2].x);
-    cvmSet(contour,2,1,pts[2].y);
-    cvmSet(contour,3,0,pts[3].x);
-    cvmSet(contour,3,1,pts[3].y);
+    CvRect contour = cvRect(pts[0].x, pts[0].y, pts[1].x-pts[0].x, pts[2].y-pts[0].y);
 
 	// 이전 matching결과 clear..
 	m_surfp1[nObj].clear();
@@ -127,8 +111,7 @@ void CKeyPointMatch::SetReferImageSURF(CvPoint* pts, IplImage* img, int nObj)
 		CV_NEXT_SEQ_ELEM( kreader.seq->elem_size, kreader );
 		CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
 
-//        if( rgn.PtInRegion(CPoint((int)kp->pt.x,(int)kp->pt.y)) )
-		if( cvPointPolygonTest(contour, cvPoint2D32f(kp->pt.x,kp->pt.y),true)>0 )
+		if( PtInRect(cvPoint2D32f(kp->pt.x,kp->pt.y), contour) )
 		{
 			for(j=0; j<SURF_FEATURE_DIM; j++)
 				fv.v[j] = (double)(descriptor[j]);
@@ -155,8 +138,8 @@ void CKeyPointMatch::SetReferImageSURF(CvPoint* pts, IplImage* img, int nObj)
 		bdpts[i].y = pts[i].y;
 	}
 
-	SaveKPsFile(REGIST_FILENAME, m_surfp1[nObj], bdpts);
-	SaveFVsFile(REGIST_FILENAME, features1);
+//	SaveKPsFile(REGIST_FILENAME, m_surfp1[nObj], bdpts);
+//	SaveFVsFile(REGIST_FILENAME, features1);
 
 	//-------------------------------------------------------------------------
 	// ANN Construction
@@ -165,7 +148,6 @@ void CKeyPointMatch::SetReferImageSURF(CvPoint* pts, IplImage* img, int nObj)
 
 	// Release memory..
 	cvReleaseImage(&tmpimg);
-	cvReleaseMat(&contour);
 }
 
 void CKeyPointMatch::SetQueryImageSURF(IplImage* img, int nObj)

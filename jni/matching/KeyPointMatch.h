@@ -59,6 +59,8 @@ public:
 	void Init();
 	bool IsValid() { return (m_Ann[0].m_kdTree != NULL); }
 
+    inline bool PtInRect(CvPoint2D32f pt, CvRect rect);
+
  	void SetReferImageSURF(CvPoint* pts, IplImage* img, int nObj);
 	void SetQueryImageSURF(IplImage* img, int nObj);
 
@@ -72,4 +74,10 @@ public:
 
 	bool RemoveOutlier(CvMat* preH, int numObj);
 };
+
+inline bool CKeyPointMatch::PtInRect(CvPoint2D32f pt, CvRect rect) {
+    return (pt.x>=rect.x && pt.x<=rect.x+rect.width &&
+     pt.y>=rect.y && pt.y<=rect.y+rect.height) ? true : false;
+}
+
 
