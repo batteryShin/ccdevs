@@ -13,11 +13,9 @@
 #include "Homography.h"
 #include "HomographyEst.h"
 
-#define	OBJECTNUM	5
+#define	OBJECTNUM	2
 
 using namespace std;
-
-class ANNkd_tree;
 
 class CKeyPointMatch
 {

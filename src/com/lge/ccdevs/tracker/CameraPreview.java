@@ -41,7 +41,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean  mCVInitialized = false;
     
     private static int d = 0;
-    private static final int FRAME_COUNT = 5;
+    private static final int FRAME_COUNT = 30;
 
     private static int mFrameCount = 0;
     private RectF mTargetRect;
