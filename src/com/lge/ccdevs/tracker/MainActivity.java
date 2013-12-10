@@ -74,8 +74,7 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, TrackerServer.class);
                 intent.putExtra("com.lge.ccdevs.tracker.IP", mServerIP);
-                //startService(intent);
-                bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                startService(intent);
                 mISServiceRunning = true;
             }});
         
@@ -196,10 +195,6 @@ public class MainActivity extends Activity {
     
     @Override
     protected void onDestroy() {
-        if (mISServiceRunning) {
-            unbindService(mConnection);
-            mISServiceRunning = false;
-        }
         super.onDestroy();
     }
 
