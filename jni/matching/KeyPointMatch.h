@@ -13,6 +13,10 @@
 #include "Homography.h"
 #include "HomographyEst.h"
 
+#include <android/log.h>
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
 #define	OBJECTNUM	2
 
 using namespace std;

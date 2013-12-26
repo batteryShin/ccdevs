@@ -10,7 +10,7 @@
 //#include <utils/threads.h>
 //#include <utils/Log.h>
 //#include <utils/Errors.h>  // for status_t
-#include <core/SkBitmap.h>
+//#include <core/SkBitmap.h>
 #include <android/bitmap.h>
 
 #include <cvjni.h>
@@ -51,7 +51,7 @@ struct fields_t {
 static fields_t fields;
 static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview";
 
-//static Tracker *tracker;
+static Tracker *tracker;
 static Matcher *matcher;
 static int ncount = 0;
 
@@ -121,7 +121,7 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
     cvCvtColor(bimg, img, CV_RGBA2BGR);
 
     // test capture
-//    Converter::saveJPG("/sdcard/cv_init.jpg", img);
+    Converter::saveJPG("/sdcard/tracker_init.jpg", img);
 
     // convert RectF
     float left = env->GetFloatField(rgn, fields.rectf_left_ID);
@@ -130,8 +130,8 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
     float bottom = env->GetFloatField(rgn, fields.rectf_bottom_ID);
 
     LOGE("#### assign initial box = ( %f, %f, %f, %f )",left,top,right,bottom);
-//	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
-	matcher = new Matcher(img, cvRect(left,top,right-left,bottom-top));
+	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
+//	matcher = new Matcher(img, cvRect(left,top,right-left,bottom-top));
 
     cvReleaseImage( &bimg );
     cvReleaseImage( &img );
@@ -230,27 +230,25 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
     cvCvtColor(bimg, img, CV_RGBA2BGR);
 
-    /* test capture
+    // test capture
     stringstream ss;
-    ss << "/sdcard/cv_track_4ch" << ncount << ".jpg";
-    Converter::saveJPG(ss.str().c_str(), bimg);
-
-    stringstream ss2;
-    ss2 << "/sdcard/cv_track_3ch" << ncount++ << ".jpg";
-    Converter::saveJPG(ss2.str().c_str(), img);
-    *////
+    ss << "/sdcard/tracker_track" << ncount++ << ".jpg";
+    Converter::saveJPG(ss.str().c_str(), img);
+/*  *////
     
-//    CvBox2D res_box = tracker->track(img);
-//    LOGE("#### tracked box size = %fx%f, center = (%f, %f)",tw,th,tcx,tcy);
-    CvRect res_rt = matcher->match(img);
+    CvBox2D res_box = tracker->track(img);
+//    CvBox2D res_box = matcher->match(img);
+//    CvBox2D src_box = matcher->getSrcBox();
 
-    float tw = res_rt.width;
-    float th = res_rt.height;
-    float tx = res_rt.x;
-    float ty = res_rt.y;
+//    float tw = src_box.size.width;
+//    float th = src_box.size.height;
+    float tw = res_box.size.width;
+    float th = res_box.size.height;
+    float tcx = res_box.center.x;
+    float tcy = res_box.center.y;
 
     float left, top, right, bottom;
-/*
+    
     if( tw>0 ) {
         left = tcx-tw/2;
         right = tcx+tw/2;
@@ -258,20 +256,14 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
         left = tcx - tracker->getPrevWidth()/2;
         right = tcx + tracker->getPrevWidth()/2;
     }
-
     if( th>0 ) {
-        left = tcy-th/2;
-        right = tcy+th/2;
+        top = tcy-th/2;
+        bottom = tcy+th/2;
     } else {
         top = tcy - tracker->getPrevHeight()/2;
         bottom = tcy + tracker->getPrevHeight()/2;
     }
-    LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
-*/
-    left = tx;
-    top = ty;
-    right = tx+tw;
-    bottom = ty+th;
+
     LOGE("#### tracked box = ( %f, %f, %f, %f )",left,top,right,bottom);
     cvReleaseImage( &bimg );
     cvReleaseImage( &img );

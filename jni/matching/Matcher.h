@@ -3,6 +3,7 @@
 #include <highgui.h>
 
 #include "KeyPointMatch.h"
+#include "Converter.h"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ class Matcher{
 	int m_curObj;			// current object
 	int m_numObj;			// number of objects
 	int m_ptnum;
+
 
 //	double m_PlanarPose[16];
 
@@ -36,6 +38,8 @@ class Matcher{
 public:
     Matcher(IplImage *pImg, CvRect rgn);
     ~Matcher();
-    CvRect match(IplImage* pImg);
+    CvBox2D match(IplImage* pImg);
+    void FindModelView(point2i* srcPts, CHomography* srcH, point2i* box, CHomography* dstH);
+    CvBox2D getSrcBox();
 };
 

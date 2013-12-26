@@ -27,12 +27,12 @@ LOCAL_SRC_FILES := \
 	facedetect/FaceAligner.cpp	\
 	facedetect/Warping.cpp	\
 	tracking/Tracker.cpp	\
-	tracking/Converter.cpp	\
 	matching/Matcher.cpp	\
 	matching/KeyPointMatch.cpp	\
 	matching/AnnMatch.cpp	\
 	matching/Homography.cpp	\
 	matching/HomographyEst.cpp	\
+	matching/Converter.cpp	\
 	matching/Vec2d.cpp
 
 

@@ -13,6 +13,8 @@
 
 #define	IND_CORNERNUM		100
 
+#define LOG_TAG "KeyPointMatch"
+
 int corner_type = 10;
 int corner_barrier = 40;
 
@@ -199,13 +201,21 @@ void CKeyPointMatch::SetQueryImageSURF(IplImage* img, int nObj)
 //			m_surfp2_minus.push_back(*kp);
 //		}
 	}
+    LOGI("surf feature extracted (%d & %d)!!", m_surfp1[nObj].size(), m_surfp2.size());
 
 	m_Ann[nObj].Match(features1);
 
 	vector<int> match = m_Ann[nObj].GetMatch();
+    LOGI("ANN matched %d pairs !!", match.size());
+
 	vector<int>::iterator iter;
 
 	m_CorspMap[nObj].clear();
+
+	FILE* file = fopen("/sdcard/kpmatch.txt", "w+");
+    stringstream ss;
+    ss.clear();
+
 	for( k=0,iter=match.begin(); iter!=match.end(); k++,++iter )
 	{
 		if( *iter == -1 ) continue;
@@ -214,7 +224,14 @@ void CKeyPointMatch::SetQueryImageSURF(IplImage* img, int nObj)
 											(int)(m_surfp1[nObj].at(*iter).pt.y+0.5),
 											(int)(m_surfp2.at(k).pt.x+0.5),
 											(int)(m_surfp2.at(k).pt.y+0.5)				)	);
+
+        ss << (int)(m_surfp1[nObj].at(*iter).pt.x+0.5) 
+            << (int)(m_surfp1[nObj].at(*iter).pt.y+0.5)
+            << (int)(m_surfp2.at(k).pt.x+0.5) << (int)(m_surfp2.at(k).pt.y+0.5)
+            << endl;
 	}
+    fputs(ss.str().c_str(), file);
+    fclose(file);
 
 	// Release memory..
 	cvReleaseImage(&tmpimg);

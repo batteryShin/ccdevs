@@ -1,5 +1,7 @@
 #include "Matcher.h"
 
+static int ncount = 0;
+
 Matcher::Matcher(IplImage *pImg, CvRect rgn):m_curObj(0),m_numObj(0)
 {
     int i, j;
@@ -7,7 +9,7 @@ Matcher::Matcher(IplImage *pImg, CvRect rgn):m_curObj(0),m_numObj(0)
     if( m_curObj!=OBJECTNUM-1 )
         m_numObj++;
 
-    m_curObj = (m_curObj+1)%OBJECTNUM;
+    m_curObj = (m_curObj+1)%OBJECTNUM - 1;
 
     m_pts[m_curObj][0].x = rgn.x;                m_pts[m_curObj][0].y = rgn.y;
     m_pts[m_curObj][1].x = rgn.x+rgn.width;      m_pts[m_curObj][1].y = rgn.y;
@@ -26,7 +28,7 @@ Matcher::~Matcher()
     delete m_surf;
 }
 
-CvRect Matcher::match(IplImage* pImg) {
+CvBox2D Matcher::match(IplImage* pImg) {
     if( m_numObj>0 )
     {
         int n, i, j;
@@ -36,13 +38,27 @@ CvRect Matcher::match(IplImage* pImg) {
             m_surf->RemoveOutlier(m_preH, n);
 
 
-            CVec2d arrSrcPts[4], arrDstPts[4];
+            point2i src_pts[4], dst_pts[4];
             for(i=0; i<4; i++) {
-                arrSrcPts[i].x = m_pts[m_curObj][i].x;
-                arrSrcPts[i].y = m_pts[m_curObj][i].y;
+                src_pts[i].x = m_pts[m_curObj][i].x;
+                src_pts[i].y = m_pts[m_curObj][i].y;
             }
 
-            m_surf->m_Homography[n].transform(arrSrcPts, arrDstPts);
+            CHomography tmpHomography;
+            FindModelView(src_pts, &(m_surf->m_Homography[n]), dst_pts, &tmpHomography);
+            
+            for(int i=0; i<3; i++)
+                for(int j=0; j<3; j++)
+                    m_surf->m_Homography[n].m_dData[i][j] = tmpHomography.m_dData[i][j];
+
+            m_surf->DrawOutput(pImg,dst_pts,n+1);
+
+            // test capture
+            stringstream ss;
+            ss << "/sdcard/tracker_match" << ncount++ << ".jpg";
+            Converter::saveJPG(ss.str().c_str(), pImg);
+            /*  *////
+
 /*
             ARParam param = m_ARToolKitProj.GetCParam();
 
@@ -68,13 +84,100 @@ CvRect Matcher::match(IplImage* pImg) {
 */
 //            m_surf->DrawOutput(m_dispDib, box, n+1);
 //
-            return cvRect( arrDstPts[0].x, arrDstPts[0].y, 
-                            arrDstPts[1].x-arrDstPts[0].x, arrDstPts[2].y-arrDstPts[1].y );
+            CvBox2D res_box;
+            float sx=0, sy=0, sw=0, sh=0;
+            for(int i=0; i<4; i++) {
+                sx += dst_pts[i].x;
+                sy += dst_pts[i].y;
+            }
+            res_box.center.x = sx/4;
+            res_box.center.y = sy/4;
+
+            for(int i=0; i<4; i++) {
+                sw += (res_box.center.x-dst_pts[i].x)*(res_box.center.x-dst_pts[i].x);
+                sh += (res_box.center.y-dst_pts[i].y)*(res_box.center.y-dst_pts[i].y);
+            }
+            res_box.size.width = 2 * sqrt(sw);
+            res_box.size.height = 2 * sqrt(sh);
+
+            return res_box;
         }
 
     }
 
 }
+
+void Matcher::FindModelView(point2i* srcPts, CHomography* srcH, point2i* box, CHomography* dstH)
+{
+    //-------------------------------------------------------------------------
+    // From four corner points, find the modelview matrix of OpenGL
+    //-------------------------------------------------------------------------
+    CVec2d arrSrcPoints[4], arrDstPoints[4];
+
+    arrSrcPoints[0].x = -80;    arrSrcPoints[0].y = -80;
+    arrSrcPoints[1].x =  80;    arrSrcPoints[1].y = -80;
+    arrSrcPoints[2].x =  80;    arrSrcPoints[2].y =  80;
+    arrSrcPoints[3].x = -80;    arrSrcPoints[3].y =  80;
+
+    CvMat* Hmat = cvCreateMat(3, 3, CV_32FC1);
+    CvMat* Hinv = cvCreateMat(3, 3, CV_32FC1);
+
+    int i, j;
+    for(i=0; i<3; i++)
+        for(j=0; j<3; j++)
+            cvmSet(Hmat, i, j, srcH->m_dData[i][j]);
+
+    box[0] = point2i(srcPts[0].x, srcPts[0].y); box[1] = point2i(srcPts[1].x, srcPts[1].y);
+    box[2] = point2i(srcPts[2].x, srcPts[2].y); box[3] = point2i(srcPts[3].x, srcPts[3].y);
+
+    float ab[3] = {0, 0, 0}, ax[3] = {0, 0, 0};
+    CvMat bb = cvMat(3, 1, CV_32FC1, ab);
+    CvMat xx = cvMat(3, 1, CV_32FC1, ax);
+    cvInvert(Hmat, Hinv);
+
+    for( i = 0 ; i < 4 ; i++ )
+    {
+        ab[0] = (float)box[i].x;
+        ab[1] = (float)box[i].y;
+        ab[2] = 1.f;
+        cvMatMul(Hinv, &bb, &xx);
+
+        box[i].x = (int)(ax[0]/ax[2] + 0.5f);
+        box[i].y = (int)(ax[1]/ax[2] + 0.5f);
+    }
+    cvReleaseMat(&Hmat);
+    cvReleaseMat(&Hinv);
+
+    for(i=0; i<4; i++)
+    {
+        arrDstPoints[i].x = box[i].x;
+        arrDstPoints[i].y = box[i].y;
+    }
+
+    bool fixedFocal = true;
+//    ARParam param = m_ARToolKitProj.GetCParam();
+    double fu = 1.0; //param.mat[0][0];
+    double fv = 1.0; //param.mat[1][1];
+    
+    dstH->compute(arrSrcPoints, arrDstPoints, 4);
+    dstH->computePose(fixedFocal, fu, fv);
+}
+
+CvBox2D Matcher::getSrcBox() {
+    CvBox2D res;
+    float sx=0, sy=0;
+    for(int i=0; i<4; i++) {
+        sx += m_pts[m_curObj][i].x;
+        sy += m_pts[m_curObj][i].y;
+    }
+    res.center.x = sx/4;
+    res.center.y = sy/4;
+    res.size.width = m_pts[m_curObj][1].x - m_pts[m_curObj][0].x;
+    res.size.height = m_pts[m_curObj][2].y - m_pts[m_curObj][1].y;
+
+    return res;
+}
+
 
 /*
 inline double Matcher::GetDist(int x1, int y1, int x2, int y2)
