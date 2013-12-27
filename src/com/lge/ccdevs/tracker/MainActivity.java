@@ -1,4 +1,3 @@
-
 package com.lge.ccdevs.tracker;
 
 import java.io.BufferedWriter;
