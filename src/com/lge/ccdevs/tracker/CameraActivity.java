@@ -38,6 +38,11 @@ public class CameraActivity extends Activity {
     private final static int ID_SET_TARGET = 0;
     private final static int ID_SHOW_TARGET = ID_SET_TARGET + 1;
     
+    //for record test
+    private final static int ID_START_RECORD = ID_SET_TARGET + 2;
+    private final static int ID_STOP_RECORD = ID_SET_TARGET + 3;
+
+    private WindowManager.LayoutParams wmParams;
     private FrameLayout mTargetLayer;
     private FrameLayout mTargetSettingLayer;
     private TargetSettingView mTargetSettingView = null;
@@ -46,6 +51,7 @@ public class CameraActivity extends Activity {
     private CameraPreview mPreview;
     private RectF mInitialTargetRect;
     private boolean mShowTarget = false;
+    private boolean mIsRecording = false;
     
     static {
 //        System.loadLibrary("Tracker_jni");
@@ -99,7 +105,7 @@ public class CameraActivity extends Activity {
         int width = metrics.widthPixels;
         int height = metrics.heightPixels;
 
-        WindowManager.LayoutParams wmParams = new WindowManager.LayoutParams(width,
+        wmParams = new WindowManager.LayoutParams(width,
                 height, 0, 0,
                 LayoutParams.TYPE_PHONE,
                 LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCH_MODAL |
@@ -111,7 +117,6 @@ public class CameraActivity extends Activity {
         wmParams.setTitle("TargetSetting");
         wmParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
 
-        wm.addView(mTargetLayer, wmParams);
         
         Button btn_done = (Button)mTargetLayer.findViewById(R.id.btn_done);
         btn_done.setOnClickListener(new OnClickListener() {
@@ -154,11 +159,18 @@ public class CameraActivity extends Activity {
             is.close();
             fos.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
         
+    @Override
+    protected void onResume() {
+        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+        wm.addView(mTargetLayer, wmParams);
+        super.onResume();
+    }
+
+
     @Override
     protected void onPause() {
         Log.d(TAG, "onPause()");
@@ -167,6 +179,11 @@ public class CameraActivity extends Activity {
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         wm.removeView(mTargetLayer);
         
+        if (mIsRecording) {
+            mIsRecording = false;
+            mPreview.stopRecording();
+        }
+        
         super.onPause();
     }
 
@@ -174,6 +191,8 @@ public class CameraActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, ID_SET_TARGET, 0, "set");
         menu.add(0, ID_SHOW_TARGET, 0, "hide target");
+        menu.add(0, ID_START_RECORD, 0, "start recording");
+        menu.add(0, ID_STOP_RECORD, 0, "stop recording");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -190,6 +209,17 @@ public class CameraActivity extends Activity {
                 } else if (item.getTitle().equals("hide target")) {
                     hideTarget();
                     item.setTitle("show target");
+                }
+                break;
+            case ID_START_RECORD :
+                if (!mIsRecording) {
+                    mIsRecording = mPreview.startRecording();
+                }
+                break;
+            case ID_STOP_RECORD :
+                if (mIsRecording) {
+                    mIsRecording = false;
+                    mPreview.stopRecording();
                 }
                 break;
         }
