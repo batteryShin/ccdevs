@@ -17,7 +17,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -93,7 +93,6 @@ public class CameraActivity extends Activity {
     private IOnDrawTargetListener mOnDrawTargetListener = new IOnDrawTargetListener() {
         @Override
         public void onDrawTarget(RectF target) {
-            Log.i(TAG, "onDrawTarget()");
             if (mShowTarget) {
                 if (target != null && !target.isEmpty()) {
                     mTargetView.drawTarget(target);
@@ -102,8 +101,16 @@ public class CameraActivity extends Activity {
         }
 
         @Override
+        public void onDrawTarget(PointF target, int radius) {
+            if (mShowTarget) {
+                if (target != null) {
+                    mTargetView.drawTarget(target, radius);
+                }
+            }
+        }
+
+        @Override
         public void onDrawTarget(float[] target) {
-            Log.i(TAG, "onDrawTarget()");
             if (mShowTarget) {
                 if (target != null) {
                     mTargetView.drawTarget(target);

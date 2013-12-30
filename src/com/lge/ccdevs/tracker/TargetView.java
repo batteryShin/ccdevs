@@ -15,6 +15,9 @@ public class TargetView extends View {
     private PointF mPtTargetStart;
     private PointF mPtTargetEnd;
 
+    private PointF mPtTargetCenter;
+    private int mPtTargetRadius;
+
     private float[] mHmatTarget;
     
     private Paint p;
@@ -25,6 +28,7 @@ public class TargetView extends View {
         mPtTargetStart = new PointF();
         mPtTargetEnd = new PointF();
         
+        mPtTargetCenter = new PointF();
         mHmatTarget = new float[8];
 
         p = new Paint();
@@ -39,6 +43,7 @@ public class TargetView extends View {
         mPtTargetStart = new PointF();
         mPtTargetEnd = new PointF();
 
+        mPtTargetCenter = new PointF();
         mHmatTarget = new float[8];
         
         p = new Paint();
@@ -57,15 +62,15 @@ public class TargetView extends View {
             canvas.drawLine(mHmatTarget[6], mHmatTarget[7], mHmatTarget[0], mHmatTarget[1], p);
         } 
 
-        if (mPtTargetStart != null && mPtTargetEnd != null) {
+        if (mPtTargetCenter != null) {
             p.setColor(Color.CYAN);
-            canvas.drawRect(mPtTargetStart.x, mPtTargetStart.y, mPtTargetEnd.x, mPtTargetEnd.y, p);
+            canvas.drawCircle(mPtTargetCenter.x, mPtTargetCenter.y, mPtTargetRadius, p);
         }
         super.onDraw(canvas);
     }
     
     public void drawTarget(RectF target) {
-        Log.i(TAG, "TargetView::drawTarget = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
+        Log.i(TAG, "TargetView::drawRect = (" + target.left + ", " + target.top + ", " + target.right + ", " + target.bottom);
         mPtTargetStart.x = target.left;
         mPtTargetStart.y = target.top;
         
@@ -75,8 +80,14 @@ public class TargetView extends View {
         this.invalidate();
     }
 
+    public void drawTarget(PointF target, int radius) {
+        Log.i(TAG, "TargetView::drawCircle = (" + target.x + ", " + target.y + "), size=" + radius);
+        mPtTargetCenter = target;
+        mPtTargetRadius = radius;
+    }
+
     public void drawTarget(float[] target) {
-        Log.i(TAG, "TargetView::drawTarget = (" +
+        Log.i(TAG, "TargetView::drawLines = (" +
                 target[0] + ", " + target[1] + "), (" +
                 target[2] + ", " + target[3] + "), (" +
                 target[4] + ", " + target[5] + "), (" +

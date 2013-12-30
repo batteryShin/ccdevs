@@ -15,7 +15,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
-import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Matrix;
 import android.hardware.Camera;
@@ -26,6 +26,7 @@ import android.media.MediaRecorder.OnInfoListener;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
@@ -54,6 +55,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private static int mFrameCount = 0;
     private RectF mScaledTargetRect;
     private RectF mDetectedRect;
+
+    private PointF mDetectedPoint;
 
     private float[] mTargetPts;
     private float[] mScaledTargetPts;
@@ -109,6 +112,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 	public interface IOnDrawTargetListener {
 	    public void onDrawTarget(RectF target);
+	    public void onDrawTarget(PointF target, int radius);
         public void onDrawTarget(float[] target);
 	}
 
@@ -138,16 +142,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         mDetectedRect = new RectF();
         mScaledTargetRect = new RectF();
+        mDetectedPoint = new PointF();
         mDetectedPts = new float[8];
         mTargetPts = new float[8];
         mScaledTargetPts = new float[8];
                 
-        Point dispSize = new Point();
         WindowManager wm = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
-        wm.getDefaultDisplay().getRealSize(dispSize);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
 
-        mDispWidth = dispSize.x;
-        mDispHeight = dispSize.y;
+        mDispWidth = metrics.widthPixels;
+        mDispHeight = metrics.heightPixels;
         Log.i(TAG, "Display (" + mDispWidth + " x " + mDispHeight + ")");
     }
 
@@ -179,7 +184,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Log.i(TAG, "setupCamera(" + width + " x " + height + ")");
         synchronized (this) {
             if (mCamera != null) {
-                setPreviewSize(width, height);
+                setPreviewSize(width/2, height/2);
                 
                 int size = mFrameWidth * mFrameHeight;
                 size = size * ImageFormat.getBitsPerPixel(mCamera.getParameters().getPreviewFormat()) / 8;
@@ -229,7 +234,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.i(TAG, "draw rect = (" + mDetectedRect.left + 
                     "," + mDetectedRect.top + "), (" + 
                     mDetectedRect.right + "," + mDetectedRect.bottom + ")");
-            mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
+//            mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
+            mDetectedPoint.x = (mDetectedRect.left+mDetectedRect.right)/2.f;
+            mDetectedPoint.y = (mDetectedRect.top+mDetectedRect.bottom)/2.f;
+            mIOnDrawTargetListener.onDrawTarget(mDetectedPoint, 100);
         }
 
         mTIMat.mapPoints(mDetectedPts,mScaledTargetPts);
@@ -329,7 +337,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     float sy = (float)mFrameHeight / (float)mDispHeight; 
                     Log.i(TAG, "scaling param = " + sx + "," + sy);
 
-                    if( sx==sy ) {
+                    if( Math.abs(sx-sy)<0.01 ) {
                         mTMat = new Matrix();
                         mTMat.postScale(sx,sy);
 
