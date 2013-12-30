@@ -29,7 +29,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
-    public static final int SERVERPORT = 8080;
+    public static final int SERVERPORT = 5555;
     
     private TrackerServer mBoundService;
     private Messenger mServerMessenger = null;
@@ -124,74 +124,6 @@ public class MainActivity extends Activity {
         return true;
     }
     
-    
-    
-    /*
-    //ip = getDottedDecimalIP(getLocalIPAddress());
-    private byte[] getLocalIPAddress() {
-        try { 
-            Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-            
-            Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()"); 
-            
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) { 
-                NetworkInterface intf = en.nextElement(); 
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) { 
-                    InetAddress inetAddress = enumIpAddr.nextElement(); 
-                    if (!inetAddress.isLoopbackAddress()) { 
-                        if (inetAddress instanceof Inet4Address) { // fix for Galaxy Nexus. IPv4 is easy to use :-) 
-                            return inetAddress.getAddress(); 
-                        } 
-                        //return inetAddress.getHostAddress().toString(); // Galaxy Nexus returns IPv6 
-                    } 
-                } 
-            }
-        } catch (SocketException ex) { 
-            //Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex); 
-        } catch (NullPointerException ex) { 
-            //Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex); 
-        } 
-        return null; 
-    }
-    
-    private String getDottedDecimalIP(byte[] ipAddr) {
-        //convert to dotted decimal notation:
-        String ipAddrStr = "";
-        for (int i=0; i<ipAddr.length; i++) {
-            if (i > 0) {
-                ipAddrStr += ".";
-            }
-            ipAddrStr += ipAddr[i]&0xFF;
-        }
-        return ipAddrStr;
-    }
-    */
-        
-    /*public String getLocalIpAddress()
-    {
-        final String IP_NONE = "N/A";
-        final String WIFI_DEVICE_PREFIX = "eth";
-     
-        String LocalIP = IP_NONE;
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();           
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        if( LocalIP.equals(IP_NONE) )
-                            LocalIP = inetAddress.getHostAddress().toString();
-                        else if( intf.getName().startsWith(WIFI_DEVICE_PREFIX) )
-                            LocalIP = inetAddress.getHostAddress().toString();
-                        }
-                    }
-                }
-        } catch (SocketException e) {
-            Log.e("MainActivity", "getLocalIpAddress Exception:"+e.toString());
-        }
-        return LocalIP;
-    }*/
-    
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -226,6 +158,7 @@ public class MainActivity extends Activity {
             try {
                 InetAddress serverAddr = InetAddress.getByName(serverIpAddress);
                 Log.d("ClientActivity", "C: Connecting...");
+                
                 Socket socket = new Socket(serverAddr, SERVERPORT);
                 connected = true;
                 while (connected) {
@@ -252,16 +185,4 @@ public class MainActivity extends Activity {
             }
         }
     }
-    
-    class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            /*switch (msg.what) {
-                case TrackerServer.MSG_FROM_SERVER:
-                    //set text
-                    break;
-                default:                        
-            }*/
-        }
-    };
 }

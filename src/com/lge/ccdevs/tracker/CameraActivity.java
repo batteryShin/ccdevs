@@ -1,18 +1,28 @@
 package com.lge.ccdevs.tracker;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
 
 import com.lge.ccdevs.tracker.CameraPreview.IOnDrawTargetListener;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -28,6 +38,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 
 public class CameraActivity extends Activity {
@@ -53,6 +64,26 @@ public class CameraActivity extends Activity {
     private boolean mShowTarget = false;
     private boolean mIsRecording = false;
     
+    
+    private int mMonitorMode;
+    
+    // Vehicle Mode Settings_start
+    private SensorEventListener mSensorListener = null;    
+    private boolean mIsFirst = true;
+    private float mPrevGx;
+    private float mPrevGz;
+    // Vehicle Mode Settings_end
+    
+    // Server/Client connection_start
+    public static final int SERVERPORT = 5555;
+    private TrackerServer mBoundService;
+    private boolean connected = false;
+    private boolean mISServiceRunning = false;
+    private String mServerIP;
+    private String clientMsg = "";
+    private String mServerIpAddress = "";
+ // Server/Client connection_end
+    
     static {
 //        System.loadLibrary("Tracker_jni");
 		System.load("/data/data/com.lge.ccdevs.tracker/lib/libTracker_jni.so");
@@ -73,7 +104,23 @@ public class CameraActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext = this;        
+        mContext = this;
+        
+        Intent i = getIntent();
+        mServerIpAddress = i.getExtras().getString("ServerIP");
+        mMonitorMode = i.getExtras().getInt("mode");
+        
+        if (mServerIpAddress.equals("")) {
+            Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
+            return;
+        } else {
+            Thread cThread = new Thread(new ClientThread());
+            cThread.start();
+        }
+        
+        if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
+            setModeVehicle();
+        }
         
         mInitialTargetRect = null;        
         
@@ -188,6 +235,17 @@ public class CameraActivity extends Activity {
     }
 
     @Override
+    protected void onDestroy() {
+        if (mSensorListener != null) {
+            SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+            sensorManager.unregisterListener(mSensorListener);
+            mSensorListener = null;
+            mIsFirst = true;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, ID_SET_TARGET, 0, "set");
         menu.add(0, ID_SHOW_TARGET, 0, "hide target");
@@ -242,5 +300,91 @@ public class CameraActivity extends Activity {
         mTargetLayer.setVisibility(View.GONE);
         mTargetSettingView.setVisibility(View.GONE);
         mShowTarget = false;
+    }
+    
+    private void setMonitorMode() {
+        switch (mMonitorMode) {
+            case MonitorModeActivity.MONITOR_MODE_PET :
+                break;
+            case MonitorModeActivity.MONITOR_MODE_BABY :
+                break;
+            case MonitorModeActivity.MONITOR_MODE_VEHICLE :
+                break;
+            default :
+                break;
+                
+        }
+    }
+    
+    private void setModeVehicle() {
+        SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        Sensor acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        
+        
+        mSensorListener = new SensorEventListener() {
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                float Gx = event.values[0];
+                float Gy = event.values[1];
+                float Gz = event.values[2];
+                //Log.d("test", "onSensorChanged:: Gx = " + Gx + " / Gz = " + Gz);
+                
+                if (mIsFirst) {
+                    mPrevGx = Gx;
+                    mPrevGz = Gz;
+                    mIsFirst = false;
+                    return;
+                }
+                
+                
+                if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
+                    Log.d("test", "sensor changed!!");
+                    clientMsg = "vehicle movement detected!!";
+                    mPrevGx = Gx;
+                    mPrevGz = Gz;
+                }                        
+            }};
+            
+        sensorManager.registerListener(mSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+    
+    public class ClientThread implements Runnable {
+
+        public void run() {
+            try {
+                InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
+                Log.d("ClientActivity", "C: Connecting...");
+                Socket socket = new Socket(serverAddr, SERVERPORT);
+                connected = true;
+                while (connected) {
+                    try {
+                        if (!clientMsg.isEmpty()) {
+                            Log.d("ClientActivity", "C: Sending command.");
+                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
+                                        .getOutputStream())), true);
+                                // where you issue the commands
+                                out.println(clientMsg);
+                            Log.d("ClientActivity", "C: Sent.");
+                            
+                            clientMsg = "";
+                        }
+                    } catch (Exception e) {
+                        Log.e("ClientActivity", "S: Error", e);
+                    }
+                }
+                socket.close();
+                Log.d("ClientActivity", "C: Closed.");
+            } catch (Exception e) {
+                Log.e("ClientActivity", "C: Error", e);
+                connected = false;
+            }
+        }
     }
 }
