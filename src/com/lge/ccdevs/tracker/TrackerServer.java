@@ -123,7 +123,6 @@ public class TrackerServer extends Service {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        //clientMsg.append(mMessage + "\n");
                                         showNotification(R.drawable.ic_launcher, mMessage);
                                     }
                                 });

@@ -53,6 +53,10 @@ public class MonitorModeActivity extends Activity {
                 // user can set target(pet) & warning area => alarm when the target is in the warning area
                 Intent intent = new Intent(MonitorModeActivity.this, CameraActivity.class);
                 intent.putExtra("mode", MONITOR_MODE_PET);
+
+                mServerIpAddress = ((EditText)findViewById(R.id.server_ip)).getText().toString();
+                intent.putExtra("ServerIP", mServerIpAddress);
+
                 startActivity(intent);
             }});
         
@@ -64,6 +68,10 @@ public class MonitorModeActivity extends Activity {
                 // user can set target => alarm when movement occur
                 Intent intent = new Intent(MonitorModeActivity.this, CameraActivity.class);
                 intent.putExtra("mode", MONITOR_MODE_BABY);
+
+                mServerIpAddress = ((EditText)findViewById(R.id.server_ip)).getText().toString();
+                intent.putExtra("ServerIP", mServerIpAddress);
+
                 startActivity(intent);
             }});
         

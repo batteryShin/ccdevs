@@ -21,6 +21,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
+import android.media.MediaRecorder.OnInfoListener;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -55,8 +56,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private static int mDispHeight;
     private float mScaleX;
     private float mScaleY;
+
     // recording
     private MediaRecorder mMediaRecorder = null;
+    private static final int MAX_RECORDING_MSEC = 10000;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -101,12 +104,23 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	public interface IOnDrawTargetListener {
 	    public void onDrawTarget(RectF target);
 	}
-	
+
 	private IOnDrawTargetListener mIOnDrawTargetListener = null;	
 	public void setOnDrawTargetListener(IOnDrawTargetListener listener) {
 	    mIOnDrawTargetListener = listener;
 	}
-	
+
+
+	public interface IOnRecordingStopListener {
+        public void onRecordingStopped();
+    }
+
+    private IOnRecordingStopListener mIOnRecordingStopListener = null;
+    public void setOnRecordingStopListener(IOnRecordingStopListener listener) {
+        mIOnRecordingStopListener = listener;
+    }
+
+
     public CameraPreview(Context context) {
         super(context);
         holder = getHolder();
@@ -345,6 +359,21 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(this.getHolder().getSurface());
+
+
+        //testing max limit
+        mMediaRecorder.setMaxDuration(MAX_RECORDING_MSEC);
+        mMediaRecorder.setOnInfoListener(new OnInfoListener() {
+
+            @Override
+            public void onInfo(MediaRecorder mr, int what, int extra) {
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+                    if (mIOnRecordingStopListener != null) {
+                        mIOnRecordingStopListener.onRecordingStopped();
+                    }
+                }
+            }});
+
 
         // Step 6: Prepare configured MediaRecorder
         try {

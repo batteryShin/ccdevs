@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import com.lge.ccdevs.tracker.CameraPreview.IOnDrawTargetListener;
+import com.lge.ccdevs.tracker.CameraPreview.IOnRecordingStopListener;
 
 import android.app.Activity;
 import android.content.Context;
@@ -101,6 +102,16 @@ public class CameraActivity extends Activity {
         }
     };
 
+    private IOnRecordingStopListener mOnRecordingStopListener = new IOnRecordingStopListener() {
+        @Override
+        public void onRecordingStopped() {
+            if (mIsRecording) {
+                mIsRecording = false;
+                mPreview.stopRecording();
+            }
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,6 +143,7 @@ public class CameraActivity extends Activity {
         
         //set OnDrawTargetListener
         mPreview.setOnDrawTargetListener(mOnDrawTargetListener);
+        mPreview.setOnRecordingStopListener(mOnRecordingStopListener);
 
         // set target setting window
         mTargetLayer = (FrameLayout)LayoutInflater.from(mContext).inflate(R.layout.target_setting, null);
@@ -334,19 +346,23 @@ public class CameraActivity extends Activity {
                 float Gx = event.values[0];
                 float Gy = event.values[1];
                 float Gz = event.values[2];
-                //Log.d("test", "onSensorChanged:: Gx = " + Gx + " / Gz = " + Gz);
-                
+
                 if (mIsFirst) {
                     mPrevGx = Gx;
                     mPrevGz = Gz;
                     mIsFirst = false;
                     return;
                 }
-                
-                
+
+
                 if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
                     Log.d("test", "sensor changed!!");
                     clientMsg = "vehicle movement detected!!";
+
+                    if (!mIsRecording) {
+                        mIsRecording = mPreview.startRecording();
+                    }
+
                     mPrevGx = Gx;
                     mPrevGz = Gz;
                 }                        
