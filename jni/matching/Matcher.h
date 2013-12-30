@@ -12,6 +12,7 @@ class Matcher{
 	CKeyPointMatch* m_surf;
 
 	CvPoint m_pts[OBJECTNUM][4];
+	float m_fpts[OBJECTNUM][8];
 
     CvMat* m_preH;
 	CvRect m_rect;

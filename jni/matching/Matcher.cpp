@@ -12,6 +12,9 @@ Matcher::Matcher(IplImage *pImg, float* pts):m_curObj(0),m_numObj(0)
     for(int i=0; i<4; i++) {
         m_pts[m_curObj][i].x = pts[2*i];
         m_pts[m_curObj][i].y = pts[2*i+1];
+
+        m_fpts[m_curObj][2*i] = pts[2*i];
+        m_fpts[m_curObj][2*i+1] = pts[2*i+1];
     }
 
     // refer image registration..
@@ -27,7 +30,6 @@ Matcher::~Matcher()
 }
 
 float* Matcher::match(IplImage* pImg) {
-    float points[8];
     if( m_numObj>0 )
     {
         int n, i, j;
@@ -79,11 +81,11 @@ float* Matcher::match(IplImage* pImg) {
 //            m_surf->DrawOutput(m_dispDib, box, n+1);
 //
             for(int i=0; i<4; i++) {
-                points[2*i] = dst_pts[i].x;
-                points[2*i+1] = dst_pts[i].y;
+                m_fpts[n][2*i] = dst_pts[i].x;
+                m_fpts[n][2*i+1] = dst_pts[i].y;
             }
 
-            return points;
+            return m_fpts[n];
         }
 
     }
@@ -147,13 +149,7 @@ void Matcher::FindModelView(point2i* srcPts, CHomography* srcH, point2i* box, CH
 }
 
 float* Matcher::getSrcPts() {
-    float points[8];
-    for(int i=0; i<4; i++) {
-        points[2*i] = m_pts[m_curObj][i].x;
-        points[2*i+1] = m_pts[m_curObj][i].y;
-    }
-
-    return points;
+    return m_fpts[m_curObj];
 }
 
 

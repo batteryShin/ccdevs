@@ -17,6 +17,7 @@ import android.graphics.ImageFormat;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.media.CamcorderProfile;
@@ -37,6 +38,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int[]               mRGB;
     private int                 mFrameSize;
     private Bitmap              mBitmap;
+    private Matrix              mTMat;
+    private Matrix              mTIMat;
     private boolean             mCameraIsInitialized;
     private int                 mFrameWidth;
     private int                 mFrameHeight;
@@ -46,16 +49,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean  mCVInitialized = false;
     
     private static int d = 0;
-    private static final int FRAME_COUNT = 30;
+    private static final int FRAME_COUNT = 10;
 
     private static int mFrameCount = 0;
-    private RectF mTargetRect;
     private RectF mScaledTargetRect;
     private RectF mDetectedRect;
+
+    private float[] mTargetPts;
+    private float[] mScaledTargetPts;
+    private float[] mDetectedPts;
+
     private static int mDispWidth;
     private static int mDispHeight;
-    private float mScaleX;
-    private float mScaleY;
 
     // recording
     private MediaRecorder mMediaRecorder = null;
@@ -64,9 +69,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
     private native final void native_cv_init(Bitmap base_img, RectF rgn);
+    private native final void native_cv_init(Bitmap base_img, float[] pts);
 	private native final RectF native_cv_track(Bitmap img);
-//	private native final File native_cv_merge(ArrayList<Bitmap> imgs);
-//
+	private native final float[] native_cv_match(Bitmap img);
+
 	static public void test_capture(Bitmap img, String fname) {
         try {
             FileOutputStream out = new FileOutputStream("/sdcard/"+fname);
@@ -103,6 +109,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 	public interface IOnDrawTargetListener {
 	    public void onDrawTarget(RectF target);
+        public void onDrawTarget(float[] target);
 	}
 
 	private IOnDrawTargetListener mIOnDrawTargetListener = null;	
@@ -128,10 +135,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         
         mBuffer = null;
         mRGB = null;
-        
+
         mDetectedRect = new RectF();
-        mTargetRect = new RectF();
         mScaledTargetRect = new RectF();
+        mDetectedPts = new float[8];
+        mTargetPts = new float[8];
+        mScaledTargetPts = new float[8];
                 
         Point dispSize = new Point();
         WindowManager wm = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
@@ -139,6 +148,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         mDispWidth = dispSize.x;
         mDispHeight = dispSize.y;
+        Log.i(TAG, "Display (" + mDispWidth + " x " + mDispHeight + ")");
     }
 
     @Override
@@ -161,12 +171,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     protected void onPreviewStarted(int previewWidth, int previewHeight) {
-        mFrameSize = previewWidth * previewHeight;
-        mBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);        
+//        mFrameSize = previewWidth * previewHeight;
+//        mBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
     }
     
     public void setupCamera(int width, int height) {
-        Log.i(TAG, "setupCamera(" + width + "x" + height + ")");
+        Log.i(TAG, "setupCamera(" + width + " x " + height + ")");
         synchronized (this) {
             if (mCamera != null) {
                 setPreviewSize(width, height);
@@ -193,7 +203,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     protected void processFrame(byte[] data){
         decodeYUV420SP(mRGB, data, mFrameWidth, mFrameHeight);
-        mBitmap = Bitmap.createBitmap(mRGB, mFrameWidth, mFrameHeight, Config.ARGB_8888);
+        mBitmap = Bitmap.createBitmap(mRGB, mFrameWidth, mFrameHeight, Config.ARGB_8888); 
 
         // native process using opencv
 //        native_cv_facex(bmp);
@@ -201,28 +211,33 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             if( !mCVInitialized ) {
                 Log.i(TAG, "native_cv_init() call");
                 native_cv_init(mBitmap, mScaledTargetRect);
+                native_cv_init(mBitmap, mScaledTargetPts);
                 mCVInitialized = true;
                 return;
             }
-//            test_capture(mBitmap, "capture"+ (d++) +".jpg");
+            Log.i(TAG, "scaled rect = ("
+                    + mScaledTargetRect.left + "," + mScaledTargetRect.top + "), (" + mScaledTargetRect.right + "," + mScaledTargetRect.bottom + ")");
+
             Log.i(TAG, "native_cv_track() call");
             mScaledTargetRect = native_cv_track(mBitmap);
-
-
-
-            Log.i(TAG, "scaled rect = ("
-                    + mScaledTargetRect.left + ", " + mScaledTargetRect.top + ") - (" + mScaledTargetRect.right + ", " + mScaledTargetRect.bottom + ")");
+            Log.i(TAG, "native_cv_match() call");
+            mScaledTargetPts = native_cv_match(mBitmap);
         }
-        
+
         // get detected rect and put it in mDetectedRect
-        mDetectedRect.set(mScaledTargetRect.top / mScaleX,
-                            mScaledTargetRect.left / mScaleY,
-                            mScaledTargetRect.bottom / mScaleX,
-                            mScaledTargetRect.right / mScaleY);
-        Log.i(TAG, "draw rect = (" + mDetectedRect.left + 
-                    ", " + mDetectedRect.top + ") - (" + 
-                    mDetectedRect.right + ", " + mDetectedRect.bottom + ")");
-        mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
+        if( mTIMat.mapRect(mDetectedRect,mScaledTargetRect) ) {
+            Log.i(TAG, "draw rect = (" + mDetectedRect.left + 
+                    "," + mDetectedRect.top + "), (" + 
+                    mDetectedRect.right + "," + mDetectedRect.bottom + ")");
+            mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
+        }
+
+        mTIMat.mapPoints(mDetectedPts,mScaledTargetPts);
+        Log.i(TAG, "draw pts = (" + mDetectedPts[0] + "," + mDetectedPts[1] +
+                "), (" + mDetectedPts[2] + "," + mDetectedPts[3] + "), (" +
+                "), (" + mDetectedPts[4] + "," + mDetectedPts[5] + "), (" +
+                "), (" + mDetectedPts[6] + "," + mDetectedPts[7] + ")");
+        mIOnDrawTargetListener.onDrawTarget(mDetectedPts);
 
         return;
     }
@@ -235,7 +250,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.e(TAG, "Can't open camera!");
             return false;
         }
-        mCamera.setDisplayOrientation(90);
+//        mCamera.setDisplayOrientation(90);
         mCamera.setPreviewCallback(new Camera.PreviewCallback(){
               
             @Override
@@ -254,10 +269,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         });
         
-        
-        Camera.Parameters params = mCamera.getParameters();
-        params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-        mCamera.setParameters(params);
         return true;
     }
 
@@ -275,6 +286,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         if(mBitmap != null) {
             mBitmap.recycle();
             mBitmap = null;
+        }
+
+        if(mTMat != null) {
+            mTMat = null;
+        }
+        if(mTIMat != null) {
+            mTIMat = null;
         }
     }
 
@@ -306,35 +324,43 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     mFrameWidth = size.width;
                     mFrameHeight = size.height;
                     
-                    params.setPreviewSize(mFrameWidth, mFrameHeight);                
-                    mCamera.setParameters(params);
-                    
                     // camera is 90 degree rotated
-                    mScaleX = (float)mFrameWidth / (float)mDispHeight;
-                    mScaleY = (float)mFrameHeight / (float)mDispWidth;
-                    Log.i(TAG, "scaling param = " + mScaleX + ", " + mScaleY);
-                    if( mScaleX==mScaleY )
+                    float sx = (float)mFrameWidth / (float)mDispWidth;
+                    float sy = (float)mFrameHeight / (float)mDispHeight; 
+                    Log.i(TAG, "scaling param = " + sx + "," + sy);
+
+                    if( sx==sy ) {
+                        mTMat = new Matrix();
+                        mTMat.postScale(sx,sy);
+
+                        mTIMat = new Matrix();
+                        mTIMat.postScale(1.f/sx,1.f/sy);
                         break;
+                    }
                 }
             }
+            params.setPreviewSize(mFrameWidth, mFrameHeight);
+            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            mCamera.setParameters(params);
         }
     }
     
     public void setTarget(RectF target) {
-        mTargetRect = target;
-        
-        mScaledTargetRect.set(mTargetRect.top * mScaleX,
-                                mTargetRect.left * mScaleY,
-                                mTargetRect.bottom * mScaleX,
-                                mTargetRect.right * mScaleY);
+//        if( mTMat.mapRect(mScaledTargetRect,target) ) {
+        mTMat.mapRect(mScaledTargetRect,target);
+            mScaledTargetPts[0] = mScaledTargetRect.left;
+            mScaledTargetPts[1] = mScaledTargetRect.top;
+            mScaledTargetPts[2] = mScaledTargetRect.right;
+            mScaledTargetPts[3] = mScaledTargetRect.top;
+            mScaledTargetPts[4] = mScaledTargetRect.right;
+            mScaledTargetPts[5] = mScaledTargetRect.bottom;
+            mScaledTargetPts[6] = mScaledTargetRect.left;
+            mScaledTargetPts[7] = mScaledTargetRect.bottom;
 
-        float top = mScaledTargetRect.top;
-        float left = mScaledTargetRect.left;
-        float right = mScaledTargetRect.right;
-        float bottom = mScaledTargetRect.bottom;
-        Log.i(TAG, "target region = (" + top + ", " + left + 
-                    ") - (" + right + ", " + bottom + ")");
-        mTargetSet = true;
+            Log.i(TAG, "target region = (" + mScaledTargetPts[0] + "," + mScaledTargetPts[1] + 
+                    "), (" + mScaledTargetPts[4] + "," + mScaledTargetPts[5] + ")");
+            mTargetSet = true;
+//        }
     }
     
     private boolean prepareVideoRecorder(){
@@ -428,5 +454,3 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
 }
-
-

@@ -100,6 +100,16 @@ public class CameraActivity extends Activity {
                 }
             }
         }
+
+        @Override
+        public void onDrawTarget(float[] target) {
+            Log.i(TAG, "onDrawTarget()");
+            if (mShowTarget) {
+                if (target != null) {
+                    mTargetView.drawTarget(target);
+                }
+            }
+        }
     };
 
     private IOnRecordingStopListener mOnRecordingStopListener = new IOnRecordingStopListener() {
@@ -121,7 +131,7 @@ public class CameraActivity extends Activity {
         mServerIpAddress = i.getExtras().getString("ServerIP");
         mMonitorMode = i.getExtras().getInt("mode");
         
-        if (mServerIpAddress.equals("")) {
+        if (mServerIpAddress==null || mServerIpAddress.equals("")) {
             Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
             return;
         } else {
