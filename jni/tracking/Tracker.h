@@ -23,6 +23,7 @@ class Tracker{
     int smin;
 
     void updateHueImage(IplImage* pImg);
+
 public:
     Tracker(IplImage * pImg, CvRect pFaceRect);
     ~Tracker();
@@ -30,4 +31,5 @@ public:
 
     float getPrevWidth();
     float getPrevHeight();
+    void drawOutput(IplImage *img, CvBox2D box);
 };

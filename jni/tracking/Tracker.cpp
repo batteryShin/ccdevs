@@ -80,7 +80,23 @@ CvBox2D Tracker::track(IplImage * pImg)
     prevFaceRect = components.rect;
     faceBox.angle = -faceBox.angle;
 
+    drawOutput(pImg, faceBox);
+
     return faceBox;
+}
+
+void Tracker::drawOutput(IplImage *img, CvBox2D box) {
+	CvScalar red = cvScalar(0,0,255);
+	CvScalar green = cvScalar(0,255,0);
+	CvScalar white = cvScalar(255,255,255);
+	CvScalar yellow = cvScalar(0,255,255);
+	CvScalar cyan = cvScalar(255,255,0);
+	CvScalar *color;
+    color = &red;
+
+    int sz = (box.size.width+box.size.height)/2.f;
+	cvCircle(img, cvPoint(box.center.x,box.center.y), sz, *color);
+//	cvLine(img, box.center, cvPoint(box[2].x,box[2].y), *color);
 }
 
 float Tracker::getPrevWidth() {

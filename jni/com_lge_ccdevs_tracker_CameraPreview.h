@@ -7,6 +7,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#undef com_lge_ccdevs_tracker_CameraPreview_FRAME_COUNT
+#define com_lge_ccdevs_tracker_CameraPreview_FRAME_COUNT 10L
 /*
  * Class:     com_lge_ccdevs_tracker_CameraPreview
  * Method:    native_cv_facex
@@ -20,8 +23,16 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1fac
  * Method:    native_cv_init
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/RectF;)V
  */
-JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init__Landroid_graphics_Bitmap_2Landroid_graphics_RectF_2
   (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     com_lge_ccdevs_tracker_CameraPreview
+ * Method:    native_cv_init
+ * Signature: (Landroid/graphics/Bitmap;[F)V
+ */
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init__Landroid_graphics_Bitmap_2_3F
+  (JNIEnv *, jobject, jobject, jfloatArray);
 
 /*
  * Class:     com_lge_ccdevs_tracker_CameraPreview
@@ -29,6 +40,14 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
  * Signature: (Landroid/graphics/Bitmap;)Landroid/graphics/RectF;
  */
 JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1track
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_lge_ccdevs_tracker_CameraPreview
+ * Method:    native_cv_match
+ * Signature: (Landroid/graphics/Bitmap;)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1match
   (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus

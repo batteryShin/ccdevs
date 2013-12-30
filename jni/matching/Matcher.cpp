@@ -1,8 +1,6 @@
 #include "Matcher.h"
 
-static int ncount = 0;
-
-Matcher::Matcher(IplImage *pImg, CvRect rgn):m_curObj(0),m_numObj(0)
+Matcher::Matcher(IplImage *pImg, float* pts):m_curObj(0),m_numObj(0)
 {
     int i, j;
 
@@ -11,10 +9,10 @@ Matcher::Matcher(IplImage *pImg, CvRect rgn):m_curObj(0),m_numObj(0)
 
     m_curObj = (m_curObj+1)%OBJECTNUM - 1;
 
-    m_pts[m_curObj][0].x = rgn.x;                m_pts[m_curObj][0].y = rgn.y;
-    m_pts[m_curObj][1].x = rgn.x+rgn.width;      m_pts[m_curObj][1].y = rgn.y;
-    m_pts[m_curObj][2].x = rgn.x+rgn.width;      m_pts[m_curObj][2].y = rgn.y+rgn.height;
-    m_pts[m_curObj][3].x = rgn.x;                m_pts[m_curObj][3].y = rgn.y+rgn.height;
+    for(int i=0; i<4; i++) {
+        m_pts[m_curObj][i].x = pts[2*i];
+        m_pts[m_curObj][i].y = pts[2*i+1];
+    }
 
     // refer image registration..
     m_surf = new CKeyPointMatch();
@@ -28,7 +26,8 @@ Matcher::~Matcher()
     delete m_surf;
 }
 
-CvBox2D Matcher::match(IplImage* pImg) {
+float* Matcher::match(IplImage* pImg) {
+    float points[8];
     if( m_numObj>0 )
     {
         int n, i, j;
@@ -53,11 +52,6 @@ CvBox2D Matcher::match(IplImage* pImg) {
 
             m_surf->DrawOutput(pImg,dst_pts,n+1);
 
-            // test capture
-            stringstream ss;
-            ss << "/sdcard/tracker_match" << ncount++ << ".jpg";
-            Converter::saveJPG(ss.str().c_str(), pImg);
-            /*  *////
 
 /*
             ARParam param = m_ARToolKitProj.GetCParam();
@@ -84,23 +78,12 @@ CvBox2D Matcher::match(IplImage* pImg) {
 */
 //            m_surf->DrawOutput(m_dispDib, box, n+1);
 //
-            CvBox2D res_box;
-            float sx=0, sy=0, sw=0, sh=0;
             for(int i=0; i<4; i++) {
-                sx += dst_pts[i].x;
-                sy += dst_pts[i].y;
+                points[2*i] = dst_pts[i].x;
+                points[2*i+1] = dst_pts[i].y;
             }
-            res_box.center.x = sx/4;
-            res_box.center.y = sy/4;
 
-            for(int i=0; i<4; i++) {
-                sw += (res_box.center.x-dst_pts[i].x)*(res_box.center.x-dst_pts[i].x);
-                sh += (res_box.center.y-dst_pts[i].y)*(res_box.center.y-dst_pts[i].y);
-            }
-            res_box.size.width = 2 * sqrt(sw);
-            res_box.size.height = 2 * sqrt(sh);
-
-            return res_box;
+            return points;
         }
 
     }
@@ -163,19 +146,14 @@ void Matcher::FindModelView(point2i* srcPts, CHomography* srcH, point2i* box, CH
     dstH->computePose(fixedFocal, fu, fv);
 }
 
-CvBox2D Matcher::getSrcBox() {
-    CvBox2D res;
-    float sx=0, sy=0;
+float* Matcher::getSrcPts() {
+    float points[8];
     for(int i=0; i<4; i++) {
-        sx += m_pts[m_curObj][i].x;
-        sy += m_pts[m_curObj][i].y;
+        points[2*i] = m_pts[m_curObj][i].x;
+        points[2*i+1] = m_pts[m_curObj][i].y;
     }
-    res.center.x = sx/4;
-    res.center.y = sy/4;
-    res.size.width = m_pts[m_curObj][1].x - m_pts[m_curObj][0].x;
-    res.size.height = m_pts[m_curObj][2].y - m_pts[m_curObj][1].y;
 
-    return res;
+    return points;
 }
 
 

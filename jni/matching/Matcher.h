@@ -36,10 +36,10 @@ class Matcher{
 
 
 public:
-    Matcher(IplImage *pImg, CvRect rgn);
+    Matcher(IplImage *pImg, float* rgn);
     ~Matcher();
-    CvBox2D match(IplImage* pImg);
+    float* match(IplImage* pImg);
     void FindModelView(point2i* srcPts, CHomography* srcH, point2i* box, CHomography* dstH);
-    CvBox2D getSrcBox();
+    float* getSrcPts();
 };
 

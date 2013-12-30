@@ -53,9 +53,11 @@ static const char* const kClassPathName = "com/lge/ccdevs/tracker/CameraPreview"
 
 static Tracker *tracker;
 static Matcher *matcher;
-static int ncount = 0;
+static float *res_pts;
+static int ncount_track = 0;
+static int ncount_match = 0;
 
-JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init__Landroid_graphics_Bitmap_2Landroid_graphics_RectF_2
 (JNIEnv *env, jobject thiz, jobject srcimg, jobject rgn) {
 	jclass clazz;
 
@@ -131,11 +133,80 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
 
     LOGE("#### assign initial box = ( %f, %f, %f, %f )",left,top,right,bottom);
 	tracker = new Tracker(img, cvRect(left,top,right-left,bottom-top));
-//	matcher = new Matcher(img, cvRect(left,top,right-left,bottom-top));
 
     cvReleaseImage( &bimg );
     cvReleaseImage( &img );
 }
+
+
+JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1init__Landroid_graphics_Bitmap_2_3F
+(JNIEnv *env, jobject thiz, jobject srcimg, jfloatArray pts) {
+	jclass clazz;
+
+	clazz = env->FindClass(kClassPathName);
+	if (clazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find com/lge/ccdevs/tracker/CameraActivity");
+		return;
+	}
+
+	fields.bitmapClazz = env->FindClass("android/graphics/Bitmap");
+	if (fields.bitmapClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find android/graphics/Bitmap");
+		return;
+	}
+
+	fields.fileClazz = env->FindClass("java/io/File");
+	if (fields.fileClazz == NULL) {
+		jniThrowException(env, "java/lang/RuntimeException", "Can't find java/io/File");
+		return;
+	}
+
+    // convert img
+	AndroidBitmapInfo bInfo;
+    char *bPixs;
+	int bRet;
+	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
+		LOGE("AndroidBitmap_getInfo failed(src)! error = %d", bRet);
+		return;
+	}
+	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE("Bitmap(src) format is not RGBA_8888!");
+		return;
+	}
+
+	if ((bRet = AndroidBitmap_lockPixels(env, srcimg, (void**)&bPixs)) < 0) {
+		LOGE("AndroidBitmap_lockPixels() failed(src)! error = %d", bRet);
+		return;
+	}
+
+	IplImage* bimg = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(bimg->imageData, bPixs, bimg->imageSize);
+	AndroidBitmap_unlockPixels(env, srcimg);
+
+
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
+    cvCvtColor(bimg, img, CV_RGBA2BGR);
+
+    // test capture
+    Converter::saveJPG("/sdcard/matcher_init.jpg", img);
+
+    // convert to float[8]
+    jfloat* fpts = env->GetFloatArrayElements(pts,0);
+    float points[8];
+    for(int i=0; i<8; i++) {
+        points[i] = fpts[i];
+    }
+    LOGE("#### assign initial pts = (%f,%f), (%f,%f), (%f,%f), (%f,%f) )",
+            points[0], points[1], points[2], points[3],
+            points[4], points[5], points[6], points[7] );
+
+	matcher = new Matcher(img, points);
+    res_pts = new float[8];
+
+    cvReleaseImage( &bimg );
+    cvReleaseImage( &img );
+}
+
 
 JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1facex
 (JNIEnv *env, jobject thiz, jobject srcimg) {
@@ -230,18 +301,13 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
     cvCvtColor(bimg, img, CV_RGBA2BGR);
 
+    CvBox2D res_box = tracker->track(img);
+
     // test capture
     stringstream ss;
-    ss << "/sdcard/tracker_track" << ncount++ << ".jpg";
+    ss << "/sdcard/tracker_track" << ncount_track++ << ".jpg";
     Converter::saveJPG(ss.str().c_str(), img);
-/*  *////
-    
-    CvBox2D res_box = tracker->track(img);
-//    CvBox2D res_box = matcher->match(img);
-//    CvBox2D src_box = matcher->getSrcBox();
 
-//    float tw = src_box.size.width;
-//    float th = src_box.size.height;
     float tw = res_box.size.width;
     float th = res_box.size.height;
     float tcx = res_box.center.x;
@@ -271,6 +337,54 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 	fields.rectfClazz = env->FindClass("android/graphics/RectF");
     fields.rectfConstructor = env->GetMethodID(fields.rectfClazz, "<init>", "(FFFF)V");
     return env->NewObject(fields.rectfClazz, fields.rectfConstructor, left, top, right, bottom);
+}
+
+JNIEXPORT jfloatArray JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1match
+(JNIEnv *env, jobject thiz, jobject srcimg) {
+	AndroidBitmapInfo bInfo;
+    char *bPixs;
+	int bRet;
+
+    // convert img
+	if ((bRet = AndroidBitmap_getInfo(env, srcimg, &bInfo)) < 0) {
+		LOGE("AndroidBitmap_getInfo failed(src)! error = %d", bRet);
+		return 0;
+	}
+	if (bInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+		LOGE("Bitmap(src) format is not RGBA_8888!");
+		return 0;
+	}
+
+	if ((bRet = AndroidBitmap_lockPixels(env, srcimg, (void**)&bPixs)) < 0) {
+		LOGE("AndroidBitmap_lockPixels() failed(src)! error = %d", bRet);
+		return 0;
+	}
+
+	IplImage* bimg = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 4);
+	memcpy(bimg->imageData, bPixs, bimg->imageSize);
+	AndroidBitmap_unlockPixels(env, srcimg);
+	IplImage* img = cvCreateImage(cvSize(bInfo.width,bInfo.height), IPL_DEPTH_8U, 3);
+    cvCvtColor(bimg, img, CV_RGBA2BGR);
+
+    
+    res_pts = matcher->match(img);
+
+    // test capture
+    stringstream ss;
+    ss << "/sdcard/tracker_match" << ncount_match++ << ".jpg";
+    Converter::saveJPG(ss.str().c_str(), img);
+
+    LOGE("#### matched pts = (%f,%f), (%f,%f), (%f,%f), (%f,%f) )",
+            res_pts[0], res_pts[1], res_pts[2], res_pts[3],
+            res_pts[4], res_pts[5], res_pts[6], res_pts[7] );
+    cvReleaseImage( &bimg );
+    cvReleaseImage( &img );
+
+    jfloatArray result;
+    result = env->NewFloatArray(8);
+    env->SetFloatArrayRegion(result,0,8,res_pts);
+
+    return result;
 }
 
 #ifdef __cplusplus

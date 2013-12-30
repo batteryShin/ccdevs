@@ -391,11 +391,11 @@ bool CKeyPointMatch::RemoveOutlier(CvMat* preH, int numObj)
 
 void CKeyPointMatch::DrawOutput(IplImage* img, point2i* box, int numObj)
 {
-	CvScalar red = cvScalar(255,0,0);
+	CvScalar red = cvScalar(0,0,255);
 	CvScalar green = cvScalar(0,255,0);
 	CvScalar white = cvScalar(255,255,255);
-	CvScalar yellow = cvScalar(255,255,0);
-	CvScalar cyan = cvScalar(0,255,255);
+	CvScalar yellow = cvScalar(0,255,255);
+	CvScalar cyan = cvScalar(255,255,0);
 	CvScalar *color;
 	if( numObj%5==0 )
 		color = &red;
