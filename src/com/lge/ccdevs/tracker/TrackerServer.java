@@ -36,7 +36,7 @@ public class TrackerServer extends Service {
     public static String SERVERIP;
 
     // designate a port
-    public static final int SERVERPORT = 8080;
+    public static final int SERVERPORT = 5555;
 
     private Handler handler = new Handler();
 
@@ -123,7 +123,6 @@ public class TrackerServer extends Service {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        //clientMsg.append(mMessage + "\n");
                                         showNotification(R.drawable.ic_launcher, mMessage);
                                     }
                                 });

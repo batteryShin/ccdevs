@@ -15,14 +15,13 @@ public class TargetSettingView extends View {
     private static final String TAG = "TargetSettingView";;
     private PointF mPtStart;
     private PointF mPtEnd;
+    //private RectF mDrawRect;
        
     private Paint p;
 
     public TargetSettingView(Context context) {
         super(context);
         
-        /*mPtStart = null;
-        mPtEnd = null;*/
         mPtStart = new PointF();
         mPtEnd = new PointF();
                 
@@ -48,23 +47,16 @@ public class TargetSettingView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN :
-                //mPtStart = new PointF();
                 mPtStart.x = event.getX();
                 mPtStart.y = event.getY();
                 Log.i(TAG, "onTouchEvent:down = " + mPtStart.x + " / " + mPtStart.y);
                 return true;
             case MotionEvent.ACTION_MOVE :
-                /*if (mPtEnd == null) {
-                    mPtEnd = new PointF();
-                }*/
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
                 this.invalidate();
                 return true;
             case MotionEvent.ACTION_UP :
-                /*if (mPtEnd == null) {
-                    mPtEnd = new PointF();
-                }*/
                 mPtEnd.x = event.getX();
                 mPtEnd.y = event.getY();
                 Log.i(TAG, "onTouchEvent:up = " + mPtEnd.x + " / " + mPtEnd.y);
@@ -80,7 +72,11 @@ public class TargetSettingView extends View {
     protected void onDraw(Canvas canvas) {
         if (mPtStart != null && mPtEnd != null) {
             p.setColor(Color.CYAN);
-            canvas.drawRect(mPtStart.x, mPtStart.y, mPtEnd.x, mPtEnd.y, p);
+
+            canvas.drawLine(mPtStart.x, mPtStart.y, mPtStart.x, mPtEnd.y, p);
+            canvas.drawLine(mPtEnd.x, mPtStart.y, mPtEnd.x, mPtEnd.y, p);
+            canvas.drawLine(mPtStart.x, mPtStart.y, mPtEnd.x, mPtStart.y, p);
+            canvas.drawLine(mPtStart.x, mPtEnd.y, mPtEnd.x, mPtEnd.y, p);
         }
         super.onDraw(canvas);
     }
