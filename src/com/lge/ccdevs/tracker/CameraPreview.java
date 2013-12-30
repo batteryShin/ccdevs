@@ -18,6 +18,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Environment;
@@ -238,6 +239,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 }
             }
         });
+        
+        
+        Camera.Parameters params = mCamera.getParameters();
+        params.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+        mCamera.setParameters(params);
         return true;
     }
 
