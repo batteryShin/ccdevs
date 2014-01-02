@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -50,7 +51,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean  mCVInitialized = false;
     
     private static int d = 0;
-    private static final int FRAME_COUNT = 10;
+    private static final int FRAME_COUNT = 5;
 
     private static int mFrameCount = 0;
     private RectF mScaledTargetRect;
@@ -78,7 +79,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 	static public void test_capture(Bitmap img, String fname) {
         try {
-            FileOutputStream out = new FileOutputStream("/sdcard/"+fname);
+            FileOutputStream out = new FileOutputStream("/sdcard/mytracker" + File.separator + fname);
             img.compress(Bitmap.CompressFormat.JPEG, 100, out);
         } catch (FileNotFoundException e) {
         }
@@ -283,6 +284,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void releaseCamera() {
         synchronized (this) {
             if (mCamera != null) {
+                Parameters params = mCamera.getParameters();
+                params.setFlashMode(Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(params);
+
                 mCamera.stopPreview();
                 mCamera.setPreviewCallback(null);
                 mCamera.release();
@@ -349,6 +354,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
             params.setPreviewSize(mFrameWidth, mFrameHeight);
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+            if( getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH) ) {
+                params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+            }
             mCamera.setParameters(params);
         }
     }
@@ -386,7 +395,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String path = "/sdcard";
         path += File.separator + "mytracker";
         String filepath = path + File.separator + "myvideo.mp4";
         mMediaRecorder.setOutputFile(filepath);

@@ -25,6 +25,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -84,6 +86,8 @@ public class CameraActivity extends Activity {
     private String clientMsg = "";
     private String mServerIpAddress = "";
  // Server/Client connection_end
+
+    private PowerManager.WakeLock mWL; 
     
     static {
 //        System.loadLibrary("Tracker_jni");
@@ -234,6 +238,9 @@ public class CameraActivity extends Activity {
             }
             is.close();
             fos.close();
+
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "DoNotDIMScreen");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -244,6 +251,8 @@ public class CameraActivity extends Activity {
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         wm.addView(mTargetLayer, wmParams);
         super.onResume();
+
+        mWL.acquire();
     }
 
 
@@ -261,6 +270,8 @@ public class CameraActivity extends Activity {
         }
         
         super.onPause();
+
+        mWL.release();
     }
 
     @Override
