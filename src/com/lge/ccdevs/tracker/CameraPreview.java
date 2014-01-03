@@ -34,7 +34,10 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final String TAG = "CameraPreview";;
+    private static final String TAG = "CameraPreview";
+
+    private Context mContext;
+
     Camera mCamera;    
     private byte[]              mBuffer;
     private int[]               mRGB;
@@ -46,6 +49,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int                 mFrameWidth;
     private int                 mFrameHeight;
     SurfaceHolder               holder;
+
     private boolean mRun = false;
     private boolean mTargetSet = false;
     private boolean  mCVInitialized = false;
@@ -68,7 +72,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     // recording
     private MediaRecorder mMediaRecorder = null;
-    private static final int MAX_RECORDING_MSEC = 10000;
+    private static final int MAX_RECORDING_MSEC = 60000;
+    private static int mVideoNum;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -135,6 +140,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public CameraPreview(Context context) {
         super(context);
+        mContext = context;
+
         holder = getHolder();
         holder.addCallback(this);
         
@@ -395,10 +402,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
-        String path = "/sdcard";
-        path += File.separator + "mytracker";
-        String filepath = path + File.separator + "myvideo.mp4";
-        mMediaRecorder.setOutputFile(filepath);
+        String path = mContext.getString(R.string.track_record_dir);
+        path += "video" + (mVideoNum++) + ".mp4";
+        mMediaRecorder.setOutputFile(path);
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(this.getHolder().getSurface());

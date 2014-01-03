@@ -216,34 +216,41 @@ public class CameraActivity extends Activity {
         InputStream is = null;
         FileOutputStream fos = null;
         File outDir = new File(getString(R.string.face_db_dir));
-        outDir.mkdirs();
+        if( outDir.mkdirs() ) {
+            Log.d(TAG, "Make [face_db_dir] !!");
 
-        try {
-            is = getAssets().open("haarcascade_frontalface_alt.xml");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            File outfile = new File(outDir + "/" + "haarcascade_frontalface_alt.xml");
-            fos = new FileOutputStream(outfile);
-            for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
-                fos.write(buffer, 0, c);
+            try {
+                is = getAssets().open("haarcascade_frontalface_alt.xml");
+                int size = is.available();
+                byte[] buffer = new byte[size];
+                File outfile = new File(outDir + "/" + "haarcascade_frontalface_alt.xml");
+                fos = new FileOutputStream(outfile);
+                for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
+                    fos.write(buffer, 0, c);
+                }
+                is.close();
+                fos.close();
+
+                is = getAssets().open("haarcascade_eye_tree_eyeglasses.xml");
+                outfile = new File(outDir + "/" + "haarcascade_eye_tree_eyeglasses.xml");
+                fos = new FileOutputStream(outfile);
+                for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
+                    fos.write(buffer, 0, c);
+                }
+                is.close();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            is.close();
-            fos.close();
-
-            is = getAssets().open("haarcascade_eye_tree_eyeglasses.xml");
-            outfile = new File(outDir + "/" + "haarcascade_eye_tree_eyeglasses.xml");
-            fos = new FileOutputStream(outfile);
-            for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
-                fos.write(buffer, 0, c);
-            }
-            is.close();
-            fos.close();
-
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "DoNotDIMScreen");
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        outDir = new File(getString(R.string.track_record_dir));
+        if( outDir.mkdirs() ) {
+            Log.d(TAG, "Make [track_record_dir] !!");
+        }
+
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "DoNotDIMScreen");
     }
         
     @Override
