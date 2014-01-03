@@ -41,6 +41,10 @@ public class MonitorModeActivity extends Activity {
             @Override
             public void onClick(View v) {                
                 mServerIpAddress = ((EditText)findViewById(R.id.server_ip)).getText().toString();
+                
+                Intent intent = new Intent("MessagingService");
+                intent.putExtra("ServerIP", mServerIpAddress);
+                startService(intent);
             }
         });
         
@@ -90,5 +94,14 @@ public class MonitorModeActivity extends Activity {
                 startActivity(intent);
             }});
     }
+
+    @Override
+    protected void onDestroy() {
+        Intent intent = new Intent("MessagingService");
+        stopService(intent);
+        super.onDestroy();
+    }
+    
+    
     
 }

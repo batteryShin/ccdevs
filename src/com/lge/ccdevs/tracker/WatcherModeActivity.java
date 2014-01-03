@@ -7,7 +7,9 @@ import java.util.Enumeration;
 import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -45,9 +47,13 @@ public class WatcherModeActivity extends Activity {
         text_ip.setText("server IP: " + mServerIP);
         
         
-        Intent intent = new Intent(WatcherModeActivity.this, TrackerServer.class);
-        intent.putExtra("com.lge.ccdevs.tracker.IP", mServerIP);
-        startService(intent);
+        // check if service is running
+        if (!isServiceRunning()) {
+            // start service
+            Intent intent = new Intent(WatcherModeActivity.this, TrackerServer.class);
+            intent.putExtra("com.lge.ccdevs.tracker.IP", mServerIP);
+            startService(intent);
+        }
     }
 
     public String getLocalIpAddress() {
@@ -71,5 +77,15 @@ public class WatcherModeActivity extends Activity {
             Log.e("IP Address", ex.toString());
         }
         return null;
+    }
+    
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (TrackerServer.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

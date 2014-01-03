@@ -141,10 +141,10 @@ public class CameraActivity extends Activity {
         if (mServerIpAddress==null || mServerIpAddress.equals("")) {
             Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
             return;
-        } else {
+        }/* else {
             Thread cThread = new Thread(new ClientThread());
             cThread.start();
-        }
+        }*/
         
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
@@ -382,6 +382,9 @@ public class CameraActivity extends Activity {
 
                     mPrevGx = Gx;
                     mPrevGz = Gz;
+                    
+                    
+
                 }                        
             }};
             
