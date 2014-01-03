@@ -137,6 +137,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mIOnRecordingStopListener = listener;
     }
 
+    public interface IOnTrackResultListener {
+        public void onResultChanged(PointF pt);
+    }
+    private IOnTrackResultListener mIOnTrackResultListener = null;
+    public void setOnTrackResultListener(IOnTrackResultListener listener) {
+        mIOnTrackResultListener = listener;
+    }
+
 
     public CameraPreview(Context context) {
         super(context);

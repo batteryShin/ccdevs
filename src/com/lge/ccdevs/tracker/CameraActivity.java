@@ -12,6 +12,7 @@ import java.net.Socket;
 
 import com.lge.ccdevs.tracker.CameraPreview.IOnDrawTargetListener;
 import com.lge.ccdevs.tracker.CameraPreview.IOnRecordingStopListener;
+import com.lge.ccdevs.tracker.CameraPreview.IOnTrackResultListener;
 
 import android.app.Activity;
 import android.content.Context;
@@ -133,6 +134,13 @@ public class CameraActivity extends Activity {
         }
     };
 
+    private IOnTrackResultListener mIOnTrackResultListener = new IOnTrackResultListener() {
+        @Override
+        public void onResultChanged(PointF pt) {
+            // TODO : need to implement the situation when track result changed
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,6 +160,10 @@ public class CameraActivity extends Activity {
         
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
+        } else if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_BABY) {
+            setModeBaby();
+        } else {
+            setModePet();
         }
         
         mInitialTargetRect = null;        
@@ -404,6 +416,21 @@ public class CameraActivity extends Activity {
             }};
             
         sensorManager.registerListener(mSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    private void setModeBaby() {
+        // TODO : need to implement of baby mode using the listener
+        
+//        mTrackResultListener = new TrackResultListener() {
+//            @override
+//            public void onTrackResultChanged(PointF pt) {
+//            }
+//        };
+
+    }
+
+    private void setModePet() {
+
     }
     
     public class ClientThread implements Runnable {

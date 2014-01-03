@@ -1,0 +1,28 @@
+diff --git a/src/com/lge/ccdevs/tracker/CameraActivity.java b/src/com/lge/ccdevs/tracker/CameraActivity.java
+index 4f99fea..df460c1 100755
+--- a/src/com/lge/ccdevs/tracker/CameraActivity.java
++++ b/src/com/lge/ccdevs/tracker/CameraActivity.java
+@@ -48,11 +48,12 @@ public class CameraActivity extends Activity {
+     Camera _camera;
+     int fcount = 0;
+     private final static int ID_SET_TARGET = 0;
+-    private final static int ID_SHOW_TARGET = ID_SET_TARGET + 1;
++    private final static int ID_AUTO_TARGET = ID_SET_TARGET + 1;
++    private final static int ID_SHOW_TARGET = ID_SET_TARGET + 2;
+     
+     //for record test
+-    private final static int ID_START_RECORD = ID_SET_TARGET + 2;
+-    private final static int ID_STOP_RECORD = ID_SET_TARGET + 3;
++    private final static int ID_START_RECORD = 10;
++    private final static int ID_STOP_RECORD = ID_START_RECORD + 1;
+ 
+     private WindowManager.LayoutParams wmParams;
+     private FrameLayout mTargetLayer;
+@@ -277,6 +278,7 @@ public class CameraActivity extends Activity {
+     @Override
+     public boolean onCreateOptionsMenu(Menu menu) {
+         menu.add(0, ID_SET_TARGET, 0, "set");
++        menu.add(0, ID_AUTO_TARGET, 0, "set target auto");
+         menu.add(0, ID_SHOW_TARGET, 0, "hide target");
+         menu.add(0, ID_START_RECORD, 0, "start recording");
+         menu.add(0, ID_STOP_RECORD, 0, "stop recording");
