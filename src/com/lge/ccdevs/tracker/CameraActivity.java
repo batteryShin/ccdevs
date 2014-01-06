@@ -25,6 +25,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -384,7 +385,11 @@ public class CameraActivity extends Activity {
                     mPrevGz = Gz;
                     
                     
-
+                    Log.d("ClientActivity", "send message to MessagingService!");
+                    Intent i = new Intent();
+                    i.putExtra("message", "hello, smt happened!!");
+                    i.setAction(MessagingService.PROCESS_MSG);
+                    sendBroadcast(i);
                 }                        
             }};
             

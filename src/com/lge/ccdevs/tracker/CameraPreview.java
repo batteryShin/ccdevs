@@ -388,6 +388,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // Step 4: Set output file
         String path = Environment.getExternalStorageDirectory().getAbsolutePath();
         path += File.separator + "mytracker";
+                
+        File out = new File(path);
+        if (!out.exists()) {
+            out.mkdirs();
+        }
+        
+        
         String filepath = path + File.separator + "myvideo.mp4";
         mMediaRecorder.setOutputFile(filepath);
 

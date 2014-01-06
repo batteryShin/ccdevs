@@ -11,39 +11,32 @@ import com.lge.ccdevs.tracker.CameraActivity.ClientThread;
 
 import android.app.IntentService;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MessagingService extends IntentService {
-        public static final int SERVERPORT = 5555;
+public class MessagingService extends Service {
+    public static final int SERVERPORT = 5555;
+    
+    public static final String PROCESS_MSG = "com.lge.ccdevs.tracker.process_message"; 
+    
     private static final int SHOW_TOAST = 0;
-    private static final int CONNECT = 1;
+    private static final int SEND_MSG = 1;
     
     private TrackerServer mBoundService;
     private boolean mServerConnected = false;
     private Socket mSocket;
     private String mServerIP;
-    private String clientMsg = "hi";
+    public String clientMsg = "hi";
     private String mServerIpAddress = "";
-    
-    public MessagingService(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        Log.d("MessagingService", "onHandleIntent");
-        Message msg = new Message();
-        msg.what = SHOW_TOAST;
-        msg.obj = "onHandleIntent";
-        handler.sendMessage(msg);
-    }
-    
-    @Override
+      
+/*    @Override
     public IBinder onBind(Intent intent) {
         Log.d("MessagingService", "onBind");
         
@@ -53,7 +46,7 @@ public class MessagingService extends IntentService {
         handler.sendMessage(msg);
         
         return null;
-    }
+    }*/
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -65,7 +58,7 @@ public class MessagingService extends IntentService {
         
         mServerIpAddress = intent.getExtras().getString("ServerIP");
         
-        /*if (mServerIpAddress==null || mServerIpAddress.equals("")) {
+        if (mServerIpAddress==null || mServerIpAddress.equals("")) {
             //Toast.makeText(getApplicationContext(), "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
             Log.d("MessagingService", "Cannot connect to the Server!!");
         } else {
@@ -74,14 +67,20 @@ public class MessagingService extends IntentService {
                 cThread.start();
                 
                 Message msg2 = new Message();
-                msg2.what = CONNECT;
+                msg2.what = SEND_MSG;
                 handler.sendMessageDelayed(msg2, 1000);
             } else {
                 Message msg2 = new Message();
-                msg2.what = CONNECT;
+                msg2.what = SEND_MSG;
                 handler.sendMessage(msg2);
             }
-        }*/
+        }
+        
+        
+        MessagingEventReceiver eventReceiver = new MessagingEventReceiver();
+        IntentFilter eventFilter = new IntentFilter();
+        eventFilter.addAction(PROCESS_MSG);
+        registerReceiver(eventReceiver, eventFilter);
         return Service.START_STICKY;
     }
 
@@ -105,13 +104,7 @@ public class MessagingService extends IntentService {
         super.onDestroy();
     }
 
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.d("MessagingService", "onUnbind");
-        return super.onUnbind(intent);
-    }
-
-    private Handler handler = new Handler() {
+    public Handler handler = new Handler() {
       @Override
       public void handleMessage(Message msg) {
           super.handleMessage(msg);
@@ -120,7 +113,7 @@ public class MessagingService extends IntentService {
                   String toast = (String)msg.obj;
                   Toast.makeText(getApplicationContext(), toast, Toast.LENGTH_SHORT).show();
                   break;
-              case CONNECT :
+              case SEND_MSG :
                   try {
                       if (!clientMsg.isEmpty()) {
                           Log.d("MessagingService", "C: Sending command.");
@@ -154,5 +147,31 @@ public class MessagingService extends IntentService {
         }
     }
 
+    public void sendMessage(String msg) {
+        Log.d("MessagingService", "sendMessage:" +msg);
+        clientMsg = msg;
+        
+        Message msg2 = new Message();
+        msg2.what = SEND_MSG;
+        handler.sendMessage(msg2);
+    }
     
+    class MessagingEventReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(PROCESS_MSG)) {
+                String msg = intent.getStringExtra("message");
+                sendMessage(msg);
+            }
+            
+        }
+        
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        
+        return null;
+    }
 }
