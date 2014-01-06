@@ -68,6 +68,12 @@
             android:enabled="true"
             android:name="com.lge.ccdevs.tracker.TrackerServer"
             android:process=":remote" />
+        <service
+            android:name="com.lge.ccdevs.tracker.MessagingService" >
+            <intent-filter>
+                <action android:name="MessagingService"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

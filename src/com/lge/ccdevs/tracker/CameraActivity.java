@@ -28,6 +28,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -164,10 +165,10 @@ public class CameraActivity extends Activity {
         if (mServerIpAddress==null || mServerIpAddress.equals("")) {
             Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
             return;
-        } else {
+        }/* else {
             Thread cThread = new Thread(new ClientThread());
             cThread.start();
-        }
+        }*/
         
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
@@ -424,6 +425,13 @@ public class CameraActivity extends Activity {
 
                     mPrevGx = Gx;
                     mPrevGz = Gz;
+                    
+                    
+                    Log.d("ClientActivity", "send message to MessagingService!");
+                    Intent i = new Intent();
+                    i.putExtra("message", "hello, smt happened!!");
+                    i.setAction(MessagingService.PROCESS_MSG);
+                    sendBroadcast(i);
                 }                        
             }};
             

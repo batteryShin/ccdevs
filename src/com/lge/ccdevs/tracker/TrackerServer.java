@@ -69,10 +69,12 @@ public class TrackerServer extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");
+        serverSocket = null;
                 
         Thread fst = new Thread(new ServerThread());
         fst.start();
 
+        
         return START_STICKY;
     }
     
@@ -80,14 +82,13 @@ public class TrackerServer extends Service {
     public void onDestroy() {
         Toast.makeText(getApplicationContext(), "stop watching..", Toast.LENGTH_SHORT).show();
         
-        try {
-            // make sure you close the socket upon exiting
-            serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        
-        mNM.cancel(NOTI_ID);
         super.onDestroy();
     }
     
@@ -133,6 +134,7 @@ public class TrackerServer extends Service {
                                 @Override
                                 public void run() {
                                     Toast.makeText(mContext, "Oops. Connection interrupted. Please reconnect your phones.", Toast.LENGTH_SHORT).show();
+                                    showNotification(R.drawable.ic_launcher, "Oops. Connection interrupted. Please reconnect your phones.");
                                 }
                             });
                             e.printStackTrace();
@@ -143,6 +145,7 @@ public class TrackerServer extends Service {
                         @Override
                         public void run() {
                             Toast.makeText(mContext, "Couldn't detect internet connection.", Toast.LENGTH_SHORT).show();
+                            showNotification(R.drawable.ic_launcher, "Couldn't detect internet connection.");
                         }
                     });
                 }
@@ -151,6 +154,7 @@ public class TrackerServer extends Service {
                     @Override
                     public void run() {
                         Toast.makeText(mContext, "Error!!", Toast.LENGTH_SHORT).show();
+                        showNotification(R.drawable.ic_launcher, "Error!!");
                     }
                 });
                 e.printStackTrace();
