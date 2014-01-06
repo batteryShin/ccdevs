@@ -136,8 +136,19 @@ public class CameraActivity extends Activity {
 
     private IOnTrackResultListener mIOnTrackResultListener = new IOnTrackResultListener() {
         @Override
-        public void onResultChanged(PointF pt) {
-            // TODO : need to implement the situation when track result changed
+        public void onResultChanged(PointF pt, int dist) {
+            PointF ipt = new PointF();
+            ipt.x = (mInitialTargetRect.left + mInitialTargetRect.right) / 2.f;
+            ipt.y = (mInitialTargetRect.top + mInitialTargetRect.bottom) / 2.f;
+
+            if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) > (dist*dist) ) {
+                Log.d(TAG, "object moved!!");
+                clientMsg = "baby movement detected!!";
+
+                if (!mIsRecording) {
+                    mIsRecording = mPreview.startRecording();
+                }
+            }
         }
     };
 
@@ -174,9 +185,10 @@ public class CameraActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(mPreview);
         
-        //set OnDrawTargetListener
+        // Listeners...
         mPreview.setOnDrawTargetListener(mOnDrawTargetListener);
         mPreview.setOnRecordingStopListener(mOnRecordingStopListener);
+        mPreview.setOnTrackResultListener(mIOnTrackResultListener);
 
         // set target setting window
         mTargetLayer = (FrameLayout)LayoutInflater.from(mContext).inflate(R.layout.target_setting, null);
@@ -220,7 +232,7 @@ public class CameraActivity extends Activity {
                 
                 mInitialTargetRect = mTargetSettingView.getTargetRect();
                 
-                mPreview.setTarget(mInitialTargetRect);
+                mPreview.setTarget(mInitialTargetRect, mMonitorMode);
                 
                 mShowTarget = true;                
             }});
@@ -403,7 +415,7 @@ public class CameraActivity extends Activity {
 
 
                 if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
-                    Log.d("test", "sensor changed!!");
+                    Log.d(TAG, "sensor changed!!");
                     clientMsg = "vehicle movement detected!!";
 
                     if (!mIsRecording) {
@@ -419,48 +431,40 @@ public class CameraActivity extends Activity {
     }
 
     private void setModeBaby() {
-        // TODO : need to implement of baby mode using the listener
-        
-//        mTrackResultListener = new TrackResultListener() {
-//            @override
-//            public void onTrackResultChanged(PointF pt) {
-//            }
-//        };
-
     }
 
     private void setModePet() {
-
     }
     
     public class ClientThread implements Runnable {
+        private static final String TAG = "ClientActivity";;
 
         public void run() {
             try {
                 InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
-                Log.d("ClientActivity", "C: Connecting...");
+                Log.d(TAG, "C: Connecting...");
                 Socket socket = new Socket(serverAddr, SERVERPORT);
                 connected = true;
                 while (connected) {
                     try {
                         if (!clientMsg.isEmpty()) {
-                            Log.d("ClientActivity", "C: Sending command.");
+                            Log.d(TAG, "C: Sending command.");
                             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
                                         .getOutputStream())), true);
                                 // where you issue the commands
                                 out.println(clientMsg);
-                            Log.d("ClientActivity", "C: Sent.");
+                            Log.d(TAG, "C: Sent.");
                             
                             clientMsg = "";
                         }
                     } catch (Exception e) {
-                        Log.e("ClientActivity", "S: Error", e);
+                        Log.e(TAG, "S: Error", e);
                     }
                 }
                 socket.close();
-                Log.d("ClientActivity", "C: Closed.");
+                Log.d(TAG, "C: Closed.");
             } catch (Exception e) {
-                Log.e("ClientActivity", "C: Error", e);
+                Log.e(TAG, "C: Error", e);
                 connected = false;
             }
         }

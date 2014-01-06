@@ -53,9 +53,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean mRun = false;
     private boolean mTargetSet = false;
     private boolean  mCVInitialized = false;
+    private boolean mCheckTR = false;
     
     private static int d = 0;
     private static final int FRAME_COUNT = 5;
+    private static final int THRESHOLD_PX_DISTANCE = 100;
 
     private static int mFrameCount = 0;
     private RectF mScaledTargetRect;
@@ -138,7 +140,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public interface IOnTrackResultListener {
-        public void onResultChanged(PointF pt);
+        public void onResultChanged(PointF pt, int dist);
     }
     private IOnTrackResultListener mIOnTrackResultListener = null;
     public void setOnTrackResultListener(IOnTrackResultListener listener) {
@@ -254,6 +256,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mDetectedPoint.x = (mDetectedRect.left+mDetectedRect.right)/2.f;
             mDetectedPoint.y = (mDetectedRect.top+mDetectedRect.bottom)/2.f;
             mIOnDrawTargetListener.onDrawTarget(mDetectedPoint, 100);
+
+            if( mCheckTR ) {
+                mIOnTrackResultListener.onResultChanged(mDetectedPoint, THRESHOLD_PX_DISTANCE);
+            }
         }
 
         mTIMat.mapPoints(mDetectedPts,mScaledTargetPts);
@@ -377,7 +383,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
     
-    public void setTarget(RectF target) {
+    public void setTarget(RectF target, int mode) {
 //        if( mTMat.mapRect(mScaledTargetRect,target) ) {
         mTMat.mapRect(mScaledTargetRect,target);
             mScaledTargetPts[0] = mScaledTargetRect.left;
@@ -392,6 +398,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.i(TAG, "target region = (" + mScaledTargetPts[0] + "," + mScaledTargetPts[1] + 
                     "), (" + mScaledTargetPts[4] + "," + mScaledTargetPts[5] + ")");
             mTargetSet = true;
+            if( mode==MonitorModeActivity.MONITOR_MODE_BABY ) {
+                mCheckTR = true;
+            }
 //        }
     }
     
@@ -475,7 +484,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Toast.makeText(getContext(), "Recording stopped", Toast.LENGTH_SHORT).show();
     }
     
-    private void releaseMediaRecorder(){
+    private void releaseMediaRecorder() {
         if (mMediaRecorder != null) {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
@@ -483,5 +492,4 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.lock();           // lock camera for later use
         }
     }
-
 }
