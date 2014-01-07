@@ -12,6 +12,7 @@ import java.net.Socket;
 
 import com.lge.ccdevs.tracker.CameraPreview.IOnDrawTargetListener;
 import com.lge.ccdevs.tracker.CameraPreview.IOnRecordingStopListener;
+import com.lge.ccdevs.tracker.CameraPreview.IOnTrackResultListener;
 
 import android.app.Activity;
 import android.content.Context;
@@ -26,6 +27,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -85,6 +88,8 @@ public class CameraActivity extends Activity {
     private String clientMsg = "";
     private String mServerIpAddress = "";
  // Server/Client connection_end
+
+    private PowerManager.WakeLock mWL; 
     
     static {
 //        System.loadLibrary("Tracker_jni");
@@ -130,6 +135,24 @@ public class CameraActivity extends Activity {
         }
     };
 
+    private IOnTrackResultListener mIOnTrackResultListener = new IOnTrackResultListener() {
+        @Override
+        public void onResultChanged(PointF pt, int dist) {
+            PointF ipt = new PointF();
+            ipt.x = (mInitialTargetRect.left + mInitialTargetRect.right) / 2.f;
+            ipt.y = (mInitialTargetRect.top + mInitialTargetRect.bottom) / 2.f;
+
+            if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) > (dist*dist) ) {
+                Log.d(TAG, "object moved!!");
+                clientMsg = "baby movement detected!!";
+
+                if (!mIsRecording) {
+                    mIsRecording = mPreview.startRecording();
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,6 +172,10 @@ public class CameraActivity extends Activity {
         
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
+        } else if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_BABY) {
+            setModeBaby();
+        } else {
+            setModePet();
         }
         
         mInitialTargetRect = null;        
@@ -159,9 +186,10 @@ public class CameraActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(mPreview);
         
-        //set OnDrawTargetListener
+        // Listeners...
         mPreview.setOnDrawTargetListener(mOnDrawTargetListener);
         mPreview.setOnRecordingStopListener(mOnRecordingStopListener);
+        mPreview.setOnTrackResultListener(mIOnTrackResultListener);
 
         // set target setting window
         mTargetLayer = (FrameLayout)LayoutInflater.from(mContext).inflate(R.layout.target_setting, null);
@@ -205,7 +233,7 @@ public class CameraActivity extends Activity {
                 
                 mInitialTargetRect = mTargetSettingView.getTargetRect();
                 
-                mPreview.setTarget(mInitialTargetRect);
+                mPreview.setTarget(mInitialTargetRect, mMonitorMode);
                 
                 mShowTarget = true;                
             }});
@@ -213,31 +241,41 @@ public class CameraActivity extends Activity {
         InputStream is = null;
         FileOutputStream fos = null;
         File outDir = new File(getString(R.string.face_db_dir));
-        outDir.mkdirs();
+        if( outDir.mkdirs() ) {
+            Log.d(TAG, "Make [face_db_dir] !!");
 
-        try {
-            is = getAssets().open("haarcascade_frontalface_alt.xml");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            File outfile = new File(outDir + "/" + "haarcascade_frontalface_alt.xml");
-            fos = new FileOutputStream(outfile);
-            for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
-                fos.write(buffer, 0, c);
-            }
-            is.close();
-            fos.close();
+            try {
+                is = getAssets().open("haarcascade_frontalface_alt.xml");
+                int size = is.available();
+                byte[] buffer = new byte[size];
+                File outfile = new File(outDir + "/" + "haarcascade_frontalface_alt.xml");
+                fos = new FileOutputStream(outfile);
+                for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
+                    fos.write(buffer, 0, c);
+                }
+                is.close();
+                fos.close();
 
-            is = getAssets().open("haarcascade_eye_tree_eyeglasses.xml");
-            outfile = new File(outDir + "/" + "haarcascade_eye_tree_eyeglasses.xml");
-            fos = new FileOutputStream(outfile);
-            for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
-                fos.write(buffer, 0, c);
+                is = getAssets().open("haarcascade_eye_tree_eyeglasses.xml");
+                outfile = new File(outDir + "/" + "haarcascade_eye_tree_eyeglasses.xml");
+                fos = new FileOutputStream(outfile);
+                for (int c = is.read(buffer); c != -1; c = is.read(buffer)){
+                    fos.write(buffer, 0, c);
+                }
+                is.close();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            is.close();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        outDir = new File(getString(R.string.track_record_dir));
+        if( outDir.mkdirs() ) {
+            Log.d(TAG, "Make [track_record_dir] !!");
+        }
+
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "DoNotDIMScreen");
     }
         
     @Override
@@ -245,6 +283,8 @@ public class CameraActivity extends Activity {
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         wm.addView(mTargetLayer, wmParams);
         super.onResume();
+
+        mWL.acquire();
     }
 
 
@@ -262,6 +302,8 @@ public class CameraActivity extends Activity {
         }
         
         super.onPause();
+
+        mWL.release();
     }
 
     @Override
@@ -374,7 +416,7 @@ public class CameraActivity extends Activity {
 
 
                 if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
-                    Log.d("test", "sensor changed!!");
+                    Log.d(TAG, "sensor changed!!");
                     clientMsg = "vehicle movement detected!!";
 
                     if (!mIsRecording) {
@@ -395,35 +437,42 @@ public class CameraActivity extends Activity {
             
         sensorManager.registerListener(mSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
     }
+
+    private void setModeBaby() {
+    }
+
+    private void setModePet() {
+    }
     
     public class ClientThread implements Runnable {
+        private static final String TAG = "ClientActivity";;
 
         public void run() {
             try {
                 InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
-                Log.d("ClientActivity", "C: Connecting...");
+                Log.d(TAG, "C: Connecting...");
                 Socket socket = new Socket(serverAddr, SERVERPORT);
                 connected = true;
                 while (connected) {
                     try {
                         if (!clientMsg.isEmpty()) {
-                            Log.d("ClientActivity", "C: Sending command.");
+                            Log.d(TAG, "C: Sending command.");
                             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
                                         .getOutputStream())), true);
                                 // where you issue the commands
                                 out.println(clientMsg);
-                            Log.d("ClientActivity", "C: Sent.");
+                            Log.d(TAG, "C: Sent.");
                             
                             clientMsg = "";
                         }
                     } catch (Exception e) {
-                        Log.e("ClientActivity", "S: Error", e);
+                        Log.e(TAG, "S: Error", e);
                     }
                 }
                 socket.close();
-                Log.d("ClientActivity", "C: Closed.");
+                Log.d(TAG, "C: Closed.");
             } catch (Exception e) {
-                Log.e("ClientActivity", "C: Error", e);
+                Log.e(TAG, "C: Error", e);
                 connected = false;
             }
         }

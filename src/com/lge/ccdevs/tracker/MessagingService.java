@@ -15,6 +15,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -33,8 +34,11 @@ public class MessagingService extends Service {
     private boolean mServerConnected = false;
     private Socket mSocket;
     private String mServerIP;
-    public String clientMsg = "hi";
+    private String clientMsg = "hi";
     private String mServerIpAddress = "";
+    
+    private MessagingEventReceiver mEventReceiver;
+
       
 /*    @Override
     public IBinder onBind(Intent intent) {
@@ -56,10 +60,14 @@ public class MessagingService extends Service {
         msg.obj = "onStartCommand";
         handler.sendMessage(msg);
         
-        mServerIpAddress = intent.getExtras().getString("ServerIP");
+        Bundle b = intent.getExtras();
+        if (b == null) {
+            Log.d("MessagingService", "onStartCommand::smt. wrong, cannot start service!!");
+            return -1;
+        }
+        mServerIpAddress = b.getString("ServerIP");
         
-        if (mServerIpAddress==null || mServerIpAddress.equals("")) {
-            //Toast.makeText(getApplicationContext(), "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
+        if (mServerIpAddress == null || mServerIpAddress.equals("")) {
             Log.d("MessagingService", "Cannot connect to the Server!!");
         } else {
             if (!mServerConnected) {
@@ -77,10 +85,10 @@ public class MessagingService extends Service {
         }
         
         
-        MessagingEventReceiver eventReceiver = new MessagingEventReceiver();
+        mEventReceiver = new MessagingEventReceiver();
         IntentFilter eventFilter = new IntentFilter();
         eventFilter.addAction(PROCESS_MSG);
-        registerReceiver(eventReceiver, eventFilter);
+        registerReceiver(mEventReceiver, eventFilter);
         return Service.START_STICKY;
     }
 
@@ -101,6 +109,8 @@ public class MessagingService extends Service {
             }
             Log.d("MessagingService", "C: Closed.");
         }
+        
+        unregisterReceiver(mEventReceiver);
         super.onDestroy();
     }
 

@@ -123,7 +123,7 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
     cvCvtColor(bimg, img, CV_RGBA2BGR);
 
     // test capture
-    Converter::saveJPG("/sdcard/tracker_init.jpg", img);
+    Converter::saveJPG("/sdcard/tracker/tracker_init.jpg", img);
 
     // convert RectF
     float left = env->GetFloatField(rgn, fields.rectf_left_ID);
@@ -188,7 +188,7 @@ JNIEXPORT void JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1ini
     cvCvtColor(bimg, img, CV_RGBA2BGR);
 
     // test capture
-    Converter::saveJPG("/sdcard/matcher_init.jpg", img);
+    Converter::saveJPG("/sdcard/tracker/matcher_init.jpg", img);
 
     // convert to float[8]
     jfloat* fpts = env->GetFloatArrayElements(pts,0);
@@ -305,7 +305,7 @@ JNIEXPORT jobject JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1cv_1
 
     // test capture
     stringstream ss;
-    ss << "/sdcard/tracker_track" << ncount_track++ << ".jpg";
+    ss << "/sdcard/tracker/tracker_track" << ncount_track++ << ".jpg";
     Converter::saveJPG(ss.str().c_str(), img);
 
     float tw = res_box.size.width;
@@ -371,7 +371,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_lge_ccdevs_tracker_CameraPreview_native_1
 
     // test capture
     stringstream ss;
-    ss << "/sdcard/tracker_match" << ncount_match++ << ".jpg";
+    ss << "/sdcard/tracker/tracker_match" << ncount_match++ << ".jpg";
     Converter::saveJPG(ss.str().c_str(), img);
 
     LOGE("#### matched pts = (%f,%f), (%f,%f), (%f,%f), (%f,%f) )",

@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -33,7 +34,10 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final String TAG = "CameraPreview";;
+    private static final String TAG = "CameraPreview";
+
+    private Context mContext;
+
     Camera mCamera;    
     private byte[]              mBuffer;
     private int[]               mRGB;
@@ -45,12 +49,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int                 mFrameWidth;
     private int                 mFrameHeight;
     SurfaceHolder               holder;
+
     private boolean mRun = false;
     private boolean mTargetSet = false;
     private boolean  mCVInitialized = false;
+    private boolean mCheckTR = false;
     
     private static int d = 0;
-    private static final int FRAME_COUNT = 10;
+    private static final int FRAME_COUNT = 5;
+    private static final int THRESHOLD_PX_DISTANCE = 100;
 
     private static int mFrameCount = 0;
     private RectF mScaledTargetRect;
@@ -67,7 +74,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     // recording
     private MediaRecorder mMediaRecorder = null;
-    private static final int MAX_RECORDING_MSEC = 10000;
+    private static final int MAX_RECORDING_MSEC = 60000;
+    private static int mVideoNum;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -78,7 +86,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 	static public void test_capture(Bitmap img, String fname) {
         try {
-            FileOutputStream out = new FileOutputStream("/sdcard/"+fname);
+            FileOutputStream out = new FileOutputStream("/sdcard/mytracker" + File.separator + fname);
             img.compress(Bitmap.CompressFormat.JPEG, 100, out);
         } catch (FileNotFoundException e) {
         }
@@ -131,9 +139,19 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mIOnRecordingStopListener = listener;
     }
 
+    public interface IOnTrackResultListener {
+        public void onResultChanged(PointF pt, int dist);
+    }
+    private IOnTrackResultListener mIOnTrackResultListener = null;
+    public void setOnTrackResultListener(IOnTrackResultListener listener) {
+        mIOnTrackResultListener = listener;
+    }
+
 
     public CameraPreview(Context context) {
         super(context);
+        mContext = context;
+
         holder = getHolder();
         holder.addCallback(this);
         
@@ -238,6 +256,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mDetectedPoint.x = (mDetectedRect.left+mDetectedRect.right)/2.f;
             mDetectedPoint.y = (mDetectedRect.top+mDetectedRect.bottom)/2.f;
             mIOnDrawTargetListener.onDrawTarget(mDetectedPoint, 100);
+
+            if( mCheckTR ) {
+                mIOnTrackResultListener.onResultChanged(mDetectedPoint, THRESHOLD_PX_DISTANCE);
+            }
         }
 
         mTIMat.mapPoints(mDetectedPts,mScaledTargetPts);
@@ -283,6 +305,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void releaseCamera() {
         synchronized (this) {
             if (mCamera != null) {
+                Parameters params = mCamera.getParameters();
+                params.setFlashMode(Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(params);
+
                 mCamera.stopPreview();
                 mCamera.setPreviewCallback(null);
                 mCamera.release();
@@ -349,11 +375,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
             params.setPreviewSize(mFrameWidth, mFrameHeight);
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+            if( getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH) ) {
+                params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+            }
             mCamera.setParameters(params);
         }
     }
     
-    public void setTarget(RectF target) {
+    public void setTarget(RectF target, int mode) {
 //        if( mTMat.mapRect(mScaledTargetRect,target) ) {
         mTMat.mapRect(mScaledTargetRect,target);
             mScaledTargetPts[0] = mScaledTargetRect.left;
@@ -368,6 +398,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.i(TAG, "target region = (" + mScaledTargetPts[0] + "," + mScaledTargetPts[1] + 
                     "), (" + mScaledTargetPts[4] + "," + mScaledTargetPts[5] + ")");
             mTargetSet = true;
+            if( mode==MonitorModeActivity.MONITOR_MODE_BABY ) {
+                mCheckTR = true;
+            }
 //        }
     }
     
@@ -393,10 +426,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         if (!out.exists()) {
             out.mkdirs();
         }
-        
-        
-        String filepath = path + File.separator + "myvideo.mp4";
+                
+        String filepath = path + File.separator + "video" + (mVideoNum++) + ".mp4";
         mMediaRecorder.setOutputFile(filepath);
+
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(this.getHolder().getSurface());
@@ -459,7 +492,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Toast.makeText(getContext(), "Recording stopped", Toast.LENGTH_SHORT).show();
     }
     
-    private void releaseMediaRecorder(){
+    private void releaseMediaRecorder() {
         if (mMediaRecorder != null) {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
@@ -467,5 +500,4 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.lock();           // lock camera for later use
         }
     }
-
 }
