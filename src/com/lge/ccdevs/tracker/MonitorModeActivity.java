@@ -24,9 +24,9 @@ import android.widget.EditText;
 
 public class MonitorModeActivity extends Activity {
     // Mode selection
-    public static final int MONITOR_MODE_PET = 0;
+    public static final int MONITOR_MODE_VEHICLE = 0;
     public static final int MONITOR_MODE_BABY = 1;
-    public static final int MONITOR_MODE_VEHICLE = 2;
+    public static final int MONITOR_MODE_PET = 2;
     
     private String mServerIpAddress;
     

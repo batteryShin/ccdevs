@@ -45,15 +45,14 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-
 public class CameraActivity extends Activity {
     private static final String TAG = "CameraActivity";;
     // Called when the activity is first created.
     Camera _camera;
     int fcount = 0;
     private final static int ID_SET_TARGET = 0;
-    private final static int ID_SHOW_TARGET = ID_SET_TARGET + 1;
-    
+    private final static int ID_SET_BOUNDARY = ID_SET_TARGET + 1;
+
     //for record test
     private final static int ID_START_RECORD = ID_SET_TARGET + 2;
     private final static int ID_STOP_RECORD = ID_SET_TARGET + 3;
@@ -66,19 +65,20 @@ public class CameraActivity extends Activity {
     private Context mContext;
     private CameraPreview mPreview;
     private RectF mInitialTargetRect;
+    private RectF mInitialBoundaryRect;
     private boolean mShowTarget = false;
     private boolean mIsRecording = false;
-    
-    
+
+
     private int mMonitorMode;
-    
+
     // Vehicle Mode Settings_start
-    private SensorEventListener mSensorListener = null;    
+    private SensorEventListener mSensorListener = null;
     private boolean mIsFirst = true;
     private float mPrevGx;
     private float mPrevGz;
     // Vehicle Mode Settings_end
-    
+
     // Server/Client connection_start
     public static final int SERVERPORT = 5555;
     private TrackerServer mBoundService;
@@ -89,8 +89,8 @@ public class CameraActivity extends Activity {
     private String mServerIpAddress = "";
  // Server/Client connection_end
 
-    private PowerManager.WakeLock mWL; 
-    
+    private PowerManager.WakeLock mWL;
+
     static {
 //        System.loadLibrary("Tracker_jni");
 		System.load("/data/data/com.lge.ccdevs.tracker/lib/libTracker_jni.so");
@@ -123,6 +123,15 @@ public class CameraActivity extends Activity {
                 }
             }
         }
+
+        @Override
+        public void onDrawBoundary(RectF boundary) {
+            if (mShowTarget) {
+                if (boundary != null) {
+                    mTargetView.drawBoundary(boundary);
+                }
+            }
+        }
     };
 
     private IOnRecordingStopListener mOnRecordingStopListener = new IOnRecordingStopListener() {
@@ -139,17 +148,36 @@ public class CameraActivity extends Activity {
         @Override
         public void onResultChanged(PointF pt, int dist) {
             PointF ipt = new PointF();
-            ipt.x = (mInitialTargetRect.left + mInitialTargetRect.right) / 2.f;
-            ipt.y = (mInitialTargetRect.top + mInitialTargetRect.bottom) / 2.f;
 
-            if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) > (dist*dist) ) {
-                Log.d(TAG, "object moved!!");
-                clientMsg = "baby movement detected!!";
+            switch(mMonitorMode) {
+                case MonitorModeActivity.MONITOR_MODE_BABY :
+                    ipt.x = (mInitialTargetRect.left + mInitialTargetRect.right) / 2.f;
+                    ipt.y = (mInitialTargetRect.top + mInitialTargetRect.bottom) / 2.f;
+                    if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) > (dist*dist) ) {
+                        Log.d(TAG, "object moved!!");
+                        clientMsg = "baby movement detected!!";
 
-                if (!mIsRecording) {
-                    mIsRecording = mPreview.startRecording();
-                }
+                        if (!mIsRecording) {
+                            mIsRecording = mPreview.startRecording();
+                        }
+                    }
+                    break;
+
+                case MonitorModeActivity.MONITOR_MODE_PET :
+                    ipt.x = (mInitialBoundaryRect.left + mInitialBoundaryRect.right) / 2.f;
+                    ipt.y = (mInitialBoundaryRect.top + mInitialBoundaryRect.bottom) / 2.f;
+
+                    if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) < (dist*dist) ) {
+                        Log.d(TAG, "object moved!!");
+                        clientMsg = "pet abnormal movement detected!!";
+
+                        if (!mIsRecording) {
+                            mIsRecording = mPreview.startRecording();
+                        }
+                    }
+                    break;
             }
+
         }
     };
 
@@ -157,11 +185,11 @@ public class CameraActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
-        
+
         Intent i = getIntent();
         mServerIpAddress = i.getExtras().getString("ServerIP");
         mMonitorMode = i.getExtras().getInt("mode");
-        
+
         if (mServerIpAddress==null || mServerIpAddress.equals("")) {
             Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
             return;
@@ -169,23 +197,24 @@ public class CameraActivity extends Activity {
             Thread cThread = new Thread(new ClientThread());
             cThread.start();
         }*/
-        
+
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
         } else if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_BABY) {
             setModeBaby();
-        } else {
+        } else if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_PET) {
             setModePet();
         }
-        
-        mInitialTargetRect = null;        
-        
+
+        mInitialTargetRect = null;
+        mInitialBoundaryRect = null;
+
         // set preview display
-        mPreview = new CameraPreview(mContext);        
+        mPreview = new CameraPreview(mContext);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(mPreview);
-        
+
         // Listeners...
         mPreview.setOnDrawTargetListener(mOnDrawTargetListener);
         mPreview.setOnRecordingStopListener(mOnRecordingStopListener);
@@ -196,7 +225,7 @@ public class CameraActivity extends Activity {
         mTargetSettingLayer = (FrameLayout)mTargetLayer.findViewById(R.id.target_setting_layout);
         mTargetSettingView = (TargetSettingView)mTargetLayer.findViewById(R.id.target_setting_view);
         mTargetView = (TargetView)mTargetLayer.findViewById(R.id.target_view);
-        
+
         /*Point dispSize = new Point();
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         wm.getDefaultDisplay().getRealSize(dispSize);
@@ -212,7 +241,7 @@ public class CameraActivity extends Activity {
 
         wmParams = new WindowManager.LayoutParams(width,
                 height, 0, 0,
-                LayoutParams.TYPE_PHONE,
+                LayoutParams.TYPE_APPLICATION,
                 LayoutParams.FLAG_NOT_FOCUSABLE | LayoutParams.FLAG_NOT_TOUCH_MODAL |
                         LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                         LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -222,7 +251,6 @@ public class CameraActivity extends Activity {
         wmParams.setTitle("TargetSetting");
         wmParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
 
-        
         Button btn_done = (Button)mTargetLayer.findViewById(R.id.btn_done);
         btn_done.setOnClickListener(new OnClickListener() {
 
@@ -230,12 +258,24 @@ public class CameraActivity extends Activity {
             public void onClick(View view) {
                 mTargetSettingLayer.setVisibility(View.GONE);
                 mTargetView.setVisibility(View.VISIBLE);
-                
-                mInitialTargetRect = mTargetSettingView.getTargetRect();
-                
-                mPreview.setTarget(mInitialTargetRect, mMonitorMode);
-                
-                mShowTarget = true;                
+
+                if(mTargetSettingView.getMode()==TargetSettingView.TARGET_SETTING) {
+                    mInitialTargetRect = mTargetSettingView.getTargetRect();
+                    mPreview.setTarget(mInitialTargetRect, mMonitorMode);
+                } else if(mTargetSettingView.getMode()==TargetSettingView.BOUNDARY_SETTING) {
+                    mInitialBoundaryRect = mTargetSettingView.getBoundaryRect();
+                    mPreview.setBoundary(mInitialBoundaryRect, mMonitorMode);
+                }
+                mShowTarget = true;
+
+            }});
+
+        Button btn_cancel = (Button)mTargetLayer.findViewById(R.id.btn_cancel);
+        btn_cancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mTargetSettingLayer.setVisibility(View.GONE);
+                mTargetView.setVisibility(View.VISIBLE);
             }});
 
         InputStream is = null;
@@ -277,7 +317,7 @@ public class CameraActivity extends Activity {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "DoNotDIMScreen");
     }
-        
+
     @Override
     protected void onResume() {
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
@@ -291,16 +331,16 @@ public class CameraActivity extends Activity {
     @Override
     protected void onPause() {
         Log.d(TAG, "onPause()");
-        
+
         mShowTarget = false;
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         wm.removeView(mTargetLayer);
-        
+
         if (mIsRecording) {
             mIsRecording = false;
             mPreview.stopRecording();
         }
-        
+
         super.onPause();
 
         mWL.release();
@@ -319,27 +359,34 @@ public class CameraActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, ID_SET_TARGET, 0, "set");
-        menu.add(0, ID_SHOW_TARGET, 0, "hide target");
+        menu.add(0, ID_SET_TARGET, 0, "set target");
+        menu.add(0, ID_SET_BOUNDARY, 0, "set boundary");
         menu.add(0, ID_START_RECORD, 0, "start recording");
         menu.add(0, ID_STOP_RECORD, 0, "stop recording");
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if( mTargetLayer.getVisibility()==View.VISIBLE ) {
+            mTargetLayer.setVisibility(View.GONE);
+        }
+
+        if( mTargetSettingLayer.getVisibility()==View.VISIBLE) {
+            mTargetSettingLayer.setVisibility(View.GONE);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case ID_SET_TARGET :
-                startTargetSetting();      
+                startTargetSetting();
                 break;
-            case ID_SHOW_TARGET :
-                if (item.getTitle().equals("show target")) {
-                    showTarget();
-                    item.setTitle("hide target");
-                } else if (item.getTitle().equals("hide target")) {
-                    hideTarget();
-                    item.setTitle("show target");
-                }
+            case ID_SET_BOUNDARY :
+                startBoundarySetting();
                 break;
             case ID_START_RECORD :
                 if (!mIsRecording) {
@@ -355,25 +402,33 @@ public class CameraActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     private void startTargetSetting() {
+        mTargetSettingView.setMode(TargetSettingView.TARGET_SETTING);
         mTargetLayer.setVisibility(View.VISIBLE);
         mTargetSettingLayer.setVisibility(View.VISIBLE);
-        mTargetView.setVisibility(View.GONE);        
+        mTargetView.setVisibility(View.GONE);
     }
-    
+
+    private void startBoundarySetting() {
+        mTargetSettingView.setMode(TargetSettingView.BOUNDARY_SETTING);
+        mTargetLayer.setVisibility(View.VISIBLE);
+        mTargetSettingLayer.setVisibility(View.VISIBLE);
+        mTargetView.setVisibility(View.GONE);
+    }
+/*
     private void showTarget() {
         mTargetLayer.setVisibility(View.VISIBLE);
         mTargetSettingView.setVisibility(View.VISIBLE);
         mShowTarget = true;
     }
-    
+
     private void hideTarget() {
         mTargetLayer.setVisibility(View.GONE);
         mTargetSettingView.setVisibility(View.GONE);
         mShowTarget = false;
     }
-    
+*/
     private void setMonitorMode() {
         switch (mMonitorMode) {
             case MonitorModeActivity.MONITOR_MODE_PET :
@@ -384,21 +439,21 @@ public class CameraActivity extends Activity {
                 break;
             default :
                 break;
-                
+
         }
     }
-    
+
     private void setModeVehicle() {
         SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         Sensor acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        
-        
+
+
         mSensorListener = new SensorEventListener() {
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
                 // TODO Auto-generated method stub
-                
+
             }
 
             @Override
@@ -416,7 +471,7 @@ public class CameraActivity extends Activity {
 
 
                 if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
-                    Log.d(TAG, "sensor changed!!");
+                    Log.i(TAG, "sensor changed!!");
                     clientMsg = "vehicle movement detected!!";
 
                     if (!mIsRecording) {
@@ -425,44 +480,59 @@ public class CameraActivity extends Activity {
 
                     mPrevGx = Gx;
                     mPrevGz = Gz;
-                    
-                    
-                    Log.d("ClientActivity", "send message to MessagingService!");
+
+
+                    Log.i(TAG, "send message to MessagingService!");
                     Intent i = new Intent();
                     i.putExtra("message", "hello, smt happened!!");
                     i.setAction(MessagingService.PROCESS_MSG);
                     sendBroadcast(i);
-                }                        
+                }
             }};
-            
+
         sensorManager.registerListener(mSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void setModeBaby() {
+        // Baby mode
     }
 
     private void setModePet() {
+        // Pet mode
     }
-    
+/*
+    public float getInitialRectSize(int type) {
+        float res;
+        if( type==MonitorModeActivity.MONITOR_MODE_BABY ) {
+            res = ((mInitTargetRect.right-mInitTargetRect.left) +
+                    (mInitTargetRect.right-mInitTargetRect.left)) / 2.f;
+        } else if( type==MonitorModeActivity.MONITOR_MODE_PET ) {
+            res = ((mInitBoundaryRect.right-mInitBoundaryRect.left) +
+                    (mInitBoundaryRect.right-mInitBoundaryRect.left)) / 2.f;
+        }
+
+        return res;
+    }
+*/
     public class ClientThread implements Runnable {
-        private static final String TAG = "ClientActivity";;
+        private static final String TAG = "ClientThread";;
 
         public void run() {
             try {
                 InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
-                Log.d(TAG, "C: Connecting...");
+                Log.i(TAG, "C: Connecting...");
                 Socket socket = new Socket(serverAddr, SERVERPORT);
                 connected = true;
                 while (connected) {
                     try {
                         if (!clientMsg.isEmpty()) {
-                            Log.d(TAG, "C: Sending command.");
+                            Log.i(TAG, "C: Sending command.");
                             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
                                         .getOutputStream())), true);
                                 // where you issue the commands
                                 out.println(clientMsg);
-                            Log.d(TAG, "C: Sent.");
-                            
+                            Log.i(TAG, "C: Sent.");
+
                             clientMsg = "";
                         }
                     } catch (Exception e) {
@@ -470,7 +540,7 @@ public class CameraActivity extends Activity {
                     }
                 }
                 socket.close();
-                Log.d(TAG, "C: Closed.");
+                Log.i(TAG, "C: Closed.");
             } catch (Exception e) {
                 Log.e(TAG, "C: Error", e);
                 connected = false;

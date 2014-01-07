@@ -14,12 +14,12 @@ public class TargetView extends View {
     private static final String TAG = "TargetView";;
     private PointF mPtTargetStart;
     private PointF mPtTargetEnd;
-
     private PointF mPtTargetCenter;
     private int mPtTargetRadius;
-
     private float[] mHmatTarget;
-    
+
+    private RectF mRectBoundary;
+
     private Paint p;
     
     public TargetView(Context context) {
@@ -30,6 +30,8 @@ public class TargetView extends View {
         
         mPtTargetCenter = new PointF();
         mHmatTarget = new float[8];
+
+        mRectBoundary = new RectF();
 
         p = new Paint();
         p.setStrokeWidth(5);
@@ -46,6 +48,8 @@ public class TargetView extends View {
         mPtTargetCenter = new PointF();
         mHmatTarget = new float[8];
         
+        mRectBoundary = new RectF();
+
         p = new Paint();
         p.setStrokeWidth(5);
         p.setColor(Color.MAGENTA);
@@ -65,6 +69,16 @@ public class TargetView extends View {
         if (mPtTargetCenter != null) {
             p.setColor(Color.CYAN);
             canvas.drawCircle(mPtTargetCenter.x, mPtTargetCenter.y, mPtTargetRadius, p);
+        }
+
+        if (mRectBoundary!=null) {
+            p.setColor(Color.RED);
+            p.setAlpha(128);
+            p.setStyle(Paint.Style.FILL);
+            canvas.drawRoundRect(mRectBoundary, 100, 100, p);
+
+            p.setAlpha(255);
+            p.setStyle(Paint.Style.STROKE);
         }
         super.onDraw(canvas);
     }
@@ -94,6 +108,13 @@ public class TargetView extends View {
                 target[6] + ", " + target[7] + ")");
 
         mHmatTarget = target;
+
+        this.invalidate();
+    }
+
+    public void drawBoundary(RectF boundary) {
+        Log.i(TAG, "TargetView::drawBoundary = (" + boundary.left + ", " + boundary.top + ", " + boundary.right + ", " + boundary.bottom);
+        mRectBoundary = boundary;
 
         this.invalidate();
     }

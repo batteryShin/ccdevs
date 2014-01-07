@@ -3,25 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:visibility="gone" >
-    
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
         android:id="@+id/target_setting_layout">
-	    <com.lge.ccdevs.tracker.TargetSettingView 
-	        android:layout_width="match_parent"
-	        android:layout_height="match_parent"
-	        android:layout_weight="1"
-	        android:id="@+id/target_setting_view"/>
-	    <Button 
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_gravity="right|bottom"
-	        android:text="Done"
-	        android:id="@+id/btn_done" />
-    </FrameLayout>    
-    <com.lge.ccdevs.tracker.TargetView 
+        <com.lge.ccdevs.tracker.TargetSettingView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:id="@+id/target_setting_view"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|bottom"
+            android:text="Cancel"
+            android:id="@+id/btn_cancel" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:text="Done"
+            android:id="@+id/btn_done" />
+    </FrameLayout>
+
+    <com.lge.ccdevs.tracker.TargetView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"

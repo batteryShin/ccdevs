@@ -52,8 +52,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private boolean mRun = false;
     private boolean mTargetSet = false;
+    private boolean mBoundarySet = false;
     private boolean  mCVInitialized = false;
-    private boolean mCheckTR = false;
+    private int mCheck = 0;
     
     private static int d = 0;
     private static final int FRAME_COUNT = 5;
@@ -68,6 +69,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private float[] mTargetPts;
     private float[] mScaledTargetPts;
     private float[] mDetectedPts;
+
+    private RectF mBoundaryRect;
 
     private static int mDispWidth;
     private static int mDispHeight;
@@ -122,6 +125,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	    public void onDrawTarget(RectF target);
 	    public void onDrawTarget(PointF target, int radius);
         public void onDrawTarget(float[] target);
+	    public void onDrawBoundary(RectF boundary);
 	}
 
 	private IOnDrawTargetListener mIOnDrawTargetListener = null;	
@@ -164,6 +168,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mDetectedPts = new float[8];
         mTargetPts = new float[8];
         mScaledTargetPts = new float[8];
+
+        mBoundaryRect = new RectF();
                 
         WindowManager wm = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics metrics = new DisplayMetrics();
@@ -230,22 +236,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // native process using opencv
 //        native_cv_facex(bmp);
-        if( mTargetSet ) {
-            if( !mCVInitialized ) {
-                Log.i(TAG, "native_cv_init() call");
-                native_cv_init(mBitmap, mScaledTargetRect);
-                native_cv_init(mBitmap, mScaledTargetPts);
-                mCVInitialized = true;
-                return;
-            }
-            Log.i(TAG, "scaled rect = ("
-                    + mScaledTargetRect.left + "," + mScaledTargetRect.top + "), (" + mScaledTargetRect.right + "," + mScaledTargetRect.bottom + ")");
-
-            Log.i(TAG, "native_cv_track() call");
-            mScaledTargetRect = native_cv_track(mBitmap);
-            Log.i(TAG, "native_cv_match() call");
-            mScaledTargetPts = native_cv_match(mBitmap);
+        if( !mCVInitialized ) {
+            Log.i(TAG, "native_cv_init() call");
+            native_cv_init(mBitmap, mScaledTargetRect);
+            native_cv_init(mBitmap, mScaledTargetPts);
+            mCVInitialized = true;
+            return;
         }
+        Log.i(TAG, "scaled rect = ("
+                + mScaledTargetRect.left + "," + mScaledTargetRect.top + "), (" + mScaledTargetRect.right + "," + mScaledTargetRect.bottom + ")");
+
+        Log.i(TAG, "native_cv_track() call");
+        mScaledTargetRect = native_cv_track(mBitmap);
+        Log.i(TAG, "native_cv_match() call");
+        mScaledTargetPts = native_cv_match(mBitmap);
 
         // get detected rect and put it in mDetectedRect
         if( mTIMat.mapRect(mDetectedRect,mScaledTargetRect) ) {
@@ -257,8 +261,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mDetectedPoint.y = (mDetectedRect.top+mDetectedRect.bottom)/2.f;
             mIOnDrawTargetListener.onDrawTarget(mDetectedPoint, 100);
 
-            if( mCheckTR ) {
+            if(mCheck==MonitorModeActivity.MONITOR_MODE_BABY) {
                 mIOnTrackResultListener.onResultChanged(mDetectedPoint, THRESHOLD_PX_DISTANCE);
+            } else if(mCheck==MonitorModeActivity.MONITOR_MODE_PET) {
+                if( mBoundarySet ) {
+                    mIOnTrackResultListener.onResultChanged(mDetectedPoint, THRESHOLD_PX_DISTANCE);
+                }
             }
         }
 
@@ -268,6 +276,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 "), (" + mDetectedPts[4] + "," + mDetectedPts[5] + "), (" +
                 "), (" + mDetectedPts[6] + "," + mDetectedPts[7] + ")");
         mIOnDrawTargetListener.onDrawTarget(mDetectedPts);
+
+        if(mBoundarySet) {
+            mIOnDrawTargetListener.onDrawBoundary(mBoundaryRect);
+        }
 
         return;
     }
@@ -384,26 +396,31 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
     
     public void setTarget(RectF target, int mode) {
-//        if( mTMat.mapRect(mScaledTargetRect,target) ) {
         mTMat.mapRect(mScaledTargetRect,target);
-            mScaledTargetPts[0] = mScaledTargetRect.left;
-            mScaledTargetPts[1] = mScaledTargetRect.top;
-            mScaledTargetPts[2] = mScaledTargetRect.right;
-            mScaledTargetPts[3] = mScaledTargetRect.top;
-            mScaledTargetPts[4] = mScaledTargetRect.right;
-            mScaledTargetPts[5] = mScaledTargetRect.bottom;
-            mScaledTargetPts[6] = mScaledTargetRect.left;
-            mScaledTargetPts[7] = mScaledTargetRect.bottom;
 
-            Log.i(TAG, "target region = (" + mScaledTargetPts[0] + "," + mScaledTargetPts[1] + 
-                    "), (" + mScaledTargetPts[4] + "," + mScaledTargetPts[5] + ")");
-            mTargetSet = true;
-            if( mode==MonitorModeActivity.MONITOR_MODE_BABY ) {
-                mCheckTR = true;
-            }
-//        }
+        mScaledTargetPts[0] = mScaledTargetRect.left;
+        mScaledTargetPts[1] = mScaledTargetRect.top;
+        mScaledTargetPts[2] = mScaledTargetRect.right;
+        mScaledTargetPts[3] = mScaledTargetRect.top;
+        mScaledTargetPts[4] = mScaledTargetRect.right;
+        mScaledTargetPts[5] = mScaledTargetRect.bottom;
+        mScaledTargetPts[6] = mScaledTargetRect.left;
+        mScaledTargetPts[7] = mScaledTargetRect.bottom;
+
+        Log.i(TAG, "target region = (" + mScaledTargetPts[0] + "," + mScaledTargetPts[1] + 
+                "), (" + mScaledTargetPts[4] + "," + mScaledTargetPts[5] + ")");
+        mTargetSet = true;
+        mCheck = mode;
     }
     
+    public void setBoundary(RectF boundary, int mode) {
+        mBoundaryRect = boundary;
+
+        Log.i(TAG, "boundary region = (" + mBoundaryRect.left + "," + mBoundaryRect.right + 
+                "), (" + mBoundaryRect.right + "," + mBoundaryRect.bottom + ")");
+        mBoundarySet = true;
+    }
+
     private boolean prepareVideoRecorder(){
         mMediaRecorder = new MediaRecorder();
 
