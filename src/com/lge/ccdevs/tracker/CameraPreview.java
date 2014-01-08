@@ -4,18 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Matrix;
@@ -25,7 +20,6 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.MediaRecorder.OnInfoListener;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
@@ -436,9 +430,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
-        String path = mContext.getString(R.string.track_record_dir);
-        path += "video" + (mVideoNum++) + ".mp4";
-        mMediaRecorder.setOutputFile(path);
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        path += File.separator + "mytracker";
+                
+        File out = new File(path);
+        if (!out.exists()) {
+            out.mkdirs();
+        }
+                
+        String filepath = path + File.separator + "video" + (mVideoNum++) + ".mp4";
+        mMediaRecorder.setOutputFile(filepath);
+
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(this.getHolder().getSurface());
