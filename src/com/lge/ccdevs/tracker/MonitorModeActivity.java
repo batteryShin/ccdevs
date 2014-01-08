@@ -14,6 +14,8 @@ import org.apache.http.conn.util.InetAddressUtils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -48,7 +50,7 @@ public class MonitorModeActivity extends Activity {
         setContentView(R.layout.monitor_mode);
 
         mContext = this;
-        mServerIP = getLocalIpAddress();
+        mServerIP = getWifiIpAddress();
 
         TextView text_ip = (TextView)findViewById(R.id.text_ip);
         text_ip.setText("Server IP: " + mServerIP);
@@ -60,10 +62,6 @@ public class MonitorModeActivity extends Activity {
         } else {
             Thread fst = new Thread(new ServerThread());
             fst.start();
-
-/*            Intent intent = new Intent("MessagingService");
-            intent.putExtra("ServerIP", mServerIP);
-            startService(intent);*/
         }
 
 
@@ -148,6 +146,16 @@ public class MonitorModeActivity extends Activity {
         }
         return null;
     }
+
+    public String getWifiIpAddress() {
+        WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ipAddress = wifiInfo.getIpAddress();
+        return String.format("%d.%d.%d.%d",
+                (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+    }
+
 
     static Handler handler = new Handler() {
         @Override

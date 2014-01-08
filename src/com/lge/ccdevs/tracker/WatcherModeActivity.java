@@ -25,7 +25,6 @@ public class WatcherModeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.watcher_mode);
 
-
         // connect to the server
         mEditTextIP = (EditText)findViewById(R.id.server_ip);
         mButtonConnect = (Button)findViewById(R.id.connect_phones);
@@ -78,28 +77,28 @@ public class WatcherModeActivity extends Activity {
             mEditTextIP.setFocusableInTouchMode(true);
         } else {
             mButtonConnect.setText("discon");
-            mEditTextIP.setText("???");
+            if (mServerIP!=null) {
+                mEditTextIP.setText(mServerIP);
+            } else {
+                Intent intent = new Intent();
+                intent.setAction(TrackerServer.MSG_GET_SERVER_IP);
+                intent.putExtra("com.lge.ccdevs.tracker.getIP", new ResultReceiver(null) {
+                    @Override
+                    protected void onReceiveResult(int resultCode, Bundle resultData) {
+                        if (resultCode == 0) {
+                            String ip = resultData.getString("com.lge.ccdevs.tracker.serverIP");
+                            mEditTextIP.setText(ip);
+                        }
+                    }
+                });
+                sendBroadcast(intent);
+            }
             mEditTextIP.setTextColor(Color.parseColor("#888888"));
             mEditTextIP.setEnabled(false);
             mEditTextIP.setFocusable(false);
-
-
-            Intent intent = new Intent();
-            intent.setAction(TrackerServer.MSG_GET_SERVER_IP);
-            intent.putExtra("com.lge.ccdevs.tracker.getIP", new ResultReceiver(null) {
-                @Override
-                protected void onReceiveResult(int resultCode, Bundle resultData) {
-                    if (resultCode == 0) {
-                        String ip = resultData.getString("com.lge.ccdevs.tracker.serverIP");
-                        mEditTextIP.setText(ip);
-                    }
-                }
-            });
-            sendBroadcast(intent);
         }
         super.onResume();
     }
-
 
     @Override
     protected void onPause() {
