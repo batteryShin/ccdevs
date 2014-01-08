@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.ResultReceiver;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -22,7 +24,8 @@ public class WatcherModeActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.watcher_mode);
-                
+
+
         // connect to the server
         mEditTextIP = (EditText)findViewById(R.id.server_ip);
         mButtonConnect = (Button)findViewById(R.id.connect_phones);
@@ -31,9 +34,9 @@ public class WatcherModeActivity extends Activity {
         mButtonConnect.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if( (Integer)v.getTag()==1 ) {
+                if ((Integer)v.getTag() == 1) {
                     Intent intent = new Intent(WatcherModeActivity.this, TrackerServer.class);
-                    if( stopService(intent) ) {
+                    if (stopService(intent)) {
                         mButtonConnect.setText("con");
                         mEditTextIP.setTextColor(Color.parseColor("#000000"));
                         mEditTextIP.setEnabled(true);
@@ -54,7 +57,7 @@ public class WatcherModeActivity extends Activity {
                     // start service
                     Intent intent = new Intent(WatcherModeActivity.this, TrackerServer.class);
                     intent.putExtra("com.lge.ccdevs.tracker.IP", mServerIP);
-                    if( startService(intent)!=null ) {
+                    if (startService(intent) != null) {
                         mButtonConnect.setText("discon");
                         mEditTextIP.setTextColor(Color.parseColor("#888888"));
                         mEditTextIP.setEnabled(false);
@@ -68,7 +71,7 @@ public class WatcherModeActivity extends Activity {
 
     @Override
     protected void onResume() {
-        if( !isServiceRunning() ) {
+        if (!isServiceRunning()) {
             mButtonConnect.setText("con");
             mEditTextIP.setTextColor(Color.parseColor("#000000"));
             mEditTextIP.setEnabled(true);
@@ -79,6 +82,20 @@ public class WatcherModeActivity extends Activity {
             mEditTextIP.setTextColor(Color.parseColor("#888888"));
             mEditTextIP.setEnabled(false);
             mEditTextIP.setFocusable(false);
+
+
+            Intent intent = new Intent();
+            intent.setAction(TrackerServer.MSG_GET_SERVER_IP);
+            intent.putExtra("com.lge.ccdevs.tracker.getIP", new ResultReceiver(null) {
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    if (resultCode == 0) {
+                        String ip = resultData.getString("com.lge.ccdevs.tracker.serverIP");
+                        mEditTextIP.setText(ip);
+                    }
+                }
+            });
+            sendBroadcast(intent);
         }
         super.onResume();
     }

@@ -8,16 +8,22 @@ import java.net.Socket;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 public class TrackerServer extends Service {
+    public static final String MSG_GET_SERVER_IP = "com.lge.ccdevs.tracker.get_server_ip";
+
     private final IBinder mBinder = new LocalBinder();
     
     private NotificationManager mNM;
@@ -55,11 +61,17 @@ public class TrackerServer extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("kyu", "onStartCommand");
         SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");
         
         Thread cThread = new Thread(new ServerThread());
         cThread.start();
         
+        WatcherEventReceiver mEventReceiver = new WatcherEventReceiver();
+        IntentFilter eventFilter = new IntentFilter();
+        eventFilter.addAction("com.lge.ccdevs.tracker.getIP");
+        registerReceiver(mEventReceiver, eventFilter);
+
         return START_STICKY;
     }
     
@@ -148,5 +160,19 @@ public class TrackerServer extends Service {
         
         builder.setContentIntent(pi);
         mNM.notify(R.layout.activity_main, builder.build());
+    }
+
+    class WatcherEventReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == MSG_GET_SERVER_IP) {
+                Log.d("kyu", "onReceive:: send IP");
+                ResultReceiver rr = intent.getExtras().getParcelable("com.lge.ccdevs.tracker.getIP");
+                Bundle b = new Bundle();
+                b.putString("com.lge.ccdevs.tracker.serverIP", SERVERIP);
+                rr.send(0, b);
+            }
+        }
     }
 }
