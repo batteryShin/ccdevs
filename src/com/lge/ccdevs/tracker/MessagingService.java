@@ -30,27 +30,13 @@ public class MessagingService extends Service {
     private static final int SHOW_TOAST = 0;
     private static final int SEND_MSG = 1;
     
-    private TrackerServer mBoundService;
     private boolean mServerConnected = false;
     private Socket mSocket;
-    private String mServerIP;
     private String clientMsg = "hi";
     private String mServerIpAddress = "";
     
     private MessagingEventReceiver mEventReceiver;
 
-      
-/*    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d("MessagingService", "onBind");
-        
-        Message msg = new Message();
-        msg.what = SHOW_TOAST;
-        msg.obj = "onBind";
-        handler.sendMessage(msg);
-        
-        return null;
-    }*/
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -71,9 +57,6 @@ public class MessagingService extends Service {
             Log.d("MessagingService", "Cannot connect to the Server!!");
         } else {
             if (!mServerConnected) {
-                Thread cThread = new Thread(new ClientThread());
-                cThread.start();
-                
                 Message msg2 = new Message();
                 msg2.what = SEND_MSG;
                 handler.sendMessageDelayed(msg2, 1000);
@@ -114,7 +97,7 @@ public class MessagingService extends Service {
         super.onDestroy();
     }
 
-    public Handler handler = new Handler() {
+    Handler handler = new Handler() {
       @Override
       public void handleMessage(Message msg) {
           super.handleMessage(msg);
@@ -141,21 +124,6 @@ public class MessagingService extends Service {
           }
       }
     };
-    
-    public class ClientThread implements Runnable {
-
-        public void run() {
-            try {
-                InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
-                Log.d("MessagingService", "C: Connecting...");
-                mSocket = new Socket(serverAddr, SERVERPORT);
-                mServerConnected = true;
-            } catch (Exception e) {
-                Log.e("MessagingService", "C: Error", e);
-                mServerConnected = false;
-            }
-        }
-    }
 
     public void sendMessage(String msg) {
         Log.d("MessagingService", "sendMessage:" +msg);
@@ -174,14 +142,11 @@ public class MessagingService extends Service {
                 String msg = intent.getStringExtra("message");
                 sendMessage(msg);
             }
-            
         }
-        
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        
         return null;
     }
 }

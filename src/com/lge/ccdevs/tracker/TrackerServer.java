@@ -4,13 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Enumeration;
-
-import org.apache.http.conn.util.InetAddressUtils;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,14 +13,11 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Messenger;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class TrackerServer extends Service {
-    private static final int NOTI_ID = 5;
     private final IBinder mBinder = new LocalBinder();
     
     private NotificationManager mNM;
@@ -37,12 +28,10 @@ public class TrackerServer extends Service {
 
     // designate a port
     public static final int SERVERPORT = 5555;
-
     private Handler handler = new Handler();
-
-    private ServerSocket serverSocket;
-    
+    private Socket mSocket = null;    
     private Context mContext;
+    
     
     
     public class LocalBinder extends Binder {
@@ -58,9 +47,7 @@ public class TrackerServer extends Service {
     
     @Override
     public void onCreate() {
-        Toast.makeText(getApplicationContext(), "start watching..", Toast.LENGTH_SHORT).show();
         mContext = this;
-
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         
         super.onCreate();
@@ -69,11 +56,9 @@ public class TrackerServer extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");
-        serverSocket = null;
-                
-        Thread fst = new Thread(new ServerThread());
-        fst.start();
-
+        
+        Thread cThread = new Thread(new ServerThread());
+        cThread.start();
         
         return START_STICKY;
     }
@@ -82,9 +67,9 @@ public class TrackerServer extends Service {
     public void onDestroy() {
         Toast.makeText(getApplicationContext(), "stop watching..", Toast.LENGTH_SHORT).show();
         
-        if (serverSocket != null) {
+        if (mSocket != null) {
             try {
-                serverSocket.close();
+                mSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -96,74 +81,61 @@ public class TrackerServer extends Service {
 
         public void run() {
             try {
-                if (SERVERIP != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(mContext, "Listening on IP: " + SERVERIP, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    serverSocket = new ServerSocket(SERVERPORT);
-                    while (true) {
-                        // listen for incoming clients
-                        Socket client = serverSocket.accept();
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(mContext, "Connected..", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        try {
-                            BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                            String line = null;
-                            while ((line = in.readLine()) != null) {
-                                Log.d("ServerActivity", line);
-                                mMessage = line;
-                                
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showNotification(R.drawable.ic_launcher, mMessage);
-                                    }
-                                });
-                            }
-                            break;
-                        } catch (Exception e) {
+                InetAddress serverAddr = InetAddress.getByName(SERVERIP);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String noti = "Connecting..";
+                        Toast.makeText(mContext, noti, Toast.LENGTH_SHORT).show();
+                        showNotification(R.drawable.ic_launcher, noti);
+                    }
+                });
+                mSocket = new Socket(serverAddr, SERVERPORT);
+                while (true) {
+                    try {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
+                        String line = null;
+                        while ((line = in.readLine()) != null) {
+                            Log.d("ServerActivity", line);
+                            mMessage = line;
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Toast.makeText(mContext, "Oops. Connection interrupted. Please reconnect your phones.", Toast.LENGTH_SHORT).show();
-                                    showNotification(R.drawable.ic_launcher, "Oops. Connection interrupted. Please reconnect your phones.");
+                                    showNotification(R.drawable.ic_launcher, mMessage);
                                 }
                             });
-                            e.printStackTrace();
                         }
+                        break;
+                    } catch (Exception e) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                String noti = "Connection interrupted. Please reconnect your phones.";
+                                Toast.makeText(mContext, noti, Toast.LENGTH_SHORT).show();
+                                showNotification(R.drawable.ic_launcher, noti);
+                            }
+                        });
+                        e.printStackTrace();
                     }
-                } else {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(mContext, "Couldn't detect internet connection.", Toast.LENGTH_SHORT).show();
-                            showNotification(R.drawable.ic_launcher, "Couldn't detect internet connection.");
-                        }
-                    });
                 }
             } catch (Exception e) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(mContext, "Error!!", Toast.LENGTH_SHORT).show();
-                        showNotification(R.drawable.ic_launcher, "Error!!");
+                        String noti = "ERROR!!";
+                        Toast.makeText(mContext, noti, Toast.LENGTH_SHORT).show();
+                        showNotification(R.drawable.ic_launcher, noti);
                     }
                 });
                 e.printStackTrace();
-            }
+                
+                stopSelf();
+            } 
         }
     }
     
     private void showNotification(int iconId, String msg) {
-        PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MyTrackerActivity.class), 0);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
         
         builder.setSmallIcon(iconId)

@@ -26,9 +26,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Message;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -42,7 +40,6 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 
@@ -81,10 +78,7 @@ public class CameraActivity extends Activity {
     
     // Server/Client connection_start
     public static final int SERVERPORT = 5555;
-    private TrackerServer mBoundService;
     private boolean connected = false;
-    private boolean mISServiceRunning = false;
-    private String mServerIP;
     private String clientMsg = "";
     private String mServerIpAddress = "";
  // Server/Client connection_end
@@ -163,7 +157,7 @@ public class CameraActivity extends Activity {
         mMonitorMode = i.getExtras().getInt("mode");
         
         if (mServerIpAddress==null || mServerIpAddress.equals("")) {
-            Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT);
+            Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT).show();
             return;
         }/* else {
             Thread cThread = new Thread(new ClientThread());
@@ -372,20 +366,6 @@ public class CameraActivity extends Activity {
         mTargetLayer.setVisibility(View.GONE);
         mTargetSettingView.setVisibility(View.GONE);
         mShowTarget = false;
-    }
-    
-    private void setMonitorMode() {
-        switch (mMonitorMode) {
-            case MonitorModeActivity.MONITOR_MODE_PET :
-                break;
-            case MonitorModeActivity.MONITOR_MODE_BABY :
-                break;
-            case MonitorModeActivity.MONITOR_MODE_VEHICLE :
-                break;
-            default :
-                break;
-                
-        }
     }
     
     private void setModeVehicle() {
