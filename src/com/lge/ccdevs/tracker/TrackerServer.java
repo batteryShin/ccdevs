@@ -82,6 +82,7 @@ public class TrackerServer extends Service {
         if (mSocket != null) {
             try {
                 mSocket.close();
+                mSocket = null;
             } catch (IOException e) {
                 e.printStackTrace();
             }

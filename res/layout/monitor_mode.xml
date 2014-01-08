@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#7CDCF5"
-            android:text="Watcher Mode" />
+            android:text="Monitoring Mode" />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

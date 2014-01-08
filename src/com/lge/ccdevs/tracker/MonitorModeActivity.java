@@ -40,6 +40,8 @@ public class MonitorModeActivity extends Activity {
     public static final int SERVERPORT = 5555;
     private String mServerIP = null;
     private ServerSocket serverSocket;
+    private ServerThread mThread;
+    private MsgHandler mHandler;
 
     private static TextView mTextStatus;
     private Context mContext;
@@ -60,8 +62,16 @@ public class MonitorModeActivity extends Activity {
         if (mServerIP == null) {
             Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
         } else {
-            Thread fst = new Thread(new ServerThread());
-            fst.start();
+            if(mHandler!=null && mHandler.hasMessages(0) ) {
+                mHandler.removeMessages(0);
+            }
+            mHandler = new MsgHandler();
+
+            if( mThread!=null && mThread.isAlive() ) {
+                mThread.interrupt();
+            }
+            mThread = new ServerThread();
+            mThread.start();
         }
 
 
@@ -121,6 +131,27 @@ public class MonitorModeActivity extends Activity {
     protected void onDestroy() {
         Intent intent = new Intent("MessagingService");
         stopService(intent);
+
+        if( mThread!=null && mThread.isAlive() ) {
+            mThread.interrupt();
+        }
+        mThread = null;
+
+
+        if(mHandler!=null && mHandler.hasMessages(0) ) {
+            mHandler.removeMessages(0);
+        }
+        mHandler = null;
+
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+                serverSocket = null;
+            } catch(Exception ex) {
+                Log.e("serverSocket close failed", ex.toString());
+            }
+        }
+
         super.onDestroy();
     }
 
@@ -157,7 +188,7 @@ public class MonitorModeActivity extends Activity {
     }
 
 
-    static Handler handler = new Handler() {
+    private class MsgHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -185,20 +216,20 @@ public class MonitorModeActivity extends Activity {
                 mTextStatus.append(status);
             }
         }
-    };
+    }
 
 
-    public class ServerThread implements Runnable {
-
+    public class ServerThread extends Thread implements Runnable {
+        @Override
         public void run() {
             try {
                 if (mServerIP != null) {
-                    handler.sendEmptyMessage(MSG_WAITING);
+                    mHandler.sendEmptyMessage(MSG_WAITING);
                     serverSocket = new ServerSocket(SERVERPORT);
                     while (true) {
                         // listen for incoming clients
                         Socket client = serverSocket.accept();
-                        handler.sendEmptyMessage(MSG_CONNECTED);
+                        mHandler.sendEmptyMessage(MSG_CONNECTED);
 
                         //
                         try {
@@ -212,10 +243,12 @@ public class MonitorModeActivity extends Activity {
                         //
                     }
                 } else {
-                    handler.sendEmptyMessage(MSG_NO_INTERNET);
+                    mHandler.sendEmptyMessage(MSG_NO_INTERNET);
                 }
             } catch (Exception e) {
-                handler.sendEmptyMessage(MSG_ERROR);
+                if (mHandler!=null) {
+                    mHandler.sendEmptyMessage(MSG_ERROR);
+                }
                 e.printStackTrace();
             }
         }
