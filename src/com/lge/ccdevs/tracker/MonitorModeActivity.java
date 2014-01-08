@@ -51,7 +51,7 @@ public class MonitorModeActivity extends Activity {
         mServerIP = getLocalIpAddress();
 
         TextView text_ip = (TextView)findViewById(R.id.text_ip);
-        text_ip.setText("server IP: " + mServerIP);
+        text_ip.setText("Server IP: " + mServerIP);
 
         mTextStatus  = (TextView)findViewById(R.id.text_status);
 
@@ -172,8 +172,8 @@ public class MonitorModeActivity extends Activity {
                     break;
             }
 
+            mTextStatus.setText("Server Status: ");
             if (!status.isEmpty()) {
-                mTextStatus.append("\n");
                 mTextStatus.append(status);
             }
         }
