@@ -87,8 +87,6 @@ public class MonitorModeActivity extends Activity {
                     // user can set target(pet) & warning area => alarm when the target is in the warning area
                     Intent intent = new Intent(MonitorModeActivity.this, CameraActivity.class);
                     intent.putExtra("mode", MONITOR_MODE_PET);
-                    intent.putExtra("ServerIP", mServerIP);
-
                     startActivity(intent);
                 } else {
                     Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
@@ -104,8 +102,6 @@ public class MonitorModeActivity extends Activity {
                     // user can set target => alarm when movement occur
                     Intent intent = new Intent(MonitorModeActivity.this, CameraActivity.class);
                     intent.putExtra("mode", MONITOR_MODE_BABY);
-                    intent.putExtra("ServerIP", mServerIP);
-
                     startActivity(intent);
                 } else {
                     Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
@@ -121,8 +117,6 @@ public class MonitorModeActivity extends Activity {
                     // alarm when vehicle movement is detected
                     Intent intent = new Intent(MonitorModeActivity.this, CameraActivity.class);
                     intent.putExtra("mode", MONITOR_MODE_VEHICLE);
-                    intent.putExtra("ServerIP", mServerIP);
-
                     startActivity(intent);
                 } else {
                     Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
