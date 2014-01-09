@@ -76,13 +76,6 @@ public class CameraActivity extends Activity {
     private float mPrevGz;
     // Vehicle Mode Settings_end
 
-    // Server/Client connection_start
-    public static final int SERVERPORT = 5555;
-    private boolean connected = false;
-    private String clientMsg = "";
-    private String mServerIpAddress = "";
- // Server/Client connection_end
-
     private PowerManager.WakeLock mWL;
 
     static {
@@ -149,7 +142,12 @@ public class CameraActivity extends Activity {
                     ipt.y = (mInitialTargetRect.top + mInitialTargetRect.bottom) / 2.f;
                     if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) > (dist*dist) ) {
                         Log.d(TAG, "object moved!!");
-                        clientMsg = "baby movement detected!!";
+                        String clientMsg = "baby movement detected!!";
+                        
+                        Intent i = new Intent();
+                        i.putExtra("message", clientMsg);
+                        i.setAction(MessagingService.PROCESS_MSG);
+                        sendBroadcast(i);
 
                         if (!mIsRecording) {
                             mIsRecording = mPreview.startRecording();
@@ -163,7 +161,12 @@ public class CameraActivity extends Activity {
 
                     if( ((ipt.x-pt.x)*(ipt.x-pt.x)+(ipt.y-pt.y)*(ipt.y-pt.y)) < (dist*dist) ) {
                         Log.d(TAG, "object moved!!");
-                        clientMsg = "pet abnormal movement detected!!";
+                        String clientMsg = "pet abnormal movement detected!!";
+                        
+                        Intent i = new Intent();
+                        i.putExtra("message", clientMsg);
+                        i.setAction(MessagingService.PROCESS_MSG);
+                        sendBroadcast(i);
 
                         if (!mIsRecording) {
                             mIsRecording = mPreview.startRecording();
@@ -181,16 +184,8 @@ public class CameraActivity extends Activity {
         mContext = this;
 
         Intent i = getIntent();
-        mServerIpAddress = i.getExtras().getString("ServerIP");
         mMonitorMode = i.getExtras().getInt("mode");
 
-        if (mServerIpAddress==null || mServerIpAddress.equals("")) {
-            Toast.makeText(mContext, "Cannot connect to the Server!!", Toast.LENGTH_SHORT).show();
-            return;
-        }/* else {
-            Thread cThread = new Thread(new ClientThread());
-            cThread.start();
-        }*/
 
         if (mMonitorMode == MonitorModeActivity.MONITOR_MODE_VEHICLE) {
             setModeVehicle();
@@ -433,8 +428,7 @@ public class CameraActivity extends Activity {
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
-                // TODO Auto-generated method stub
-
+                //
             }
 
             @Override
@@ -453,19 +447,17 @@ public class CameraActivity extends Activity {
 
                 if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
                     Log.i(TAG, "sensor changed!!");
-                    clientMsg = "vehicle movement detected!!";
+                    String clientMsg = "vehicle movement detected!!";
 
                     if (!mIsRecording) {
                         mIsRecording = mPreview.startRecording();
                     }
-
                     mPrevGx = Gx;
                     mPrevGz = Gz;
 
-
                     Log.i(TAG, "send message to MessagingService!");
                     Intent i = new Intent();
-                    i.putExtra("message", "hello, smt happened!!");
+                    i.putExtra("message", clientMsg);
                     i.setAction(MessagingService.PROCESS_MSG);
                     sendBroadcast(i);
                 }
@@ -480,52 +472,5 @@ public class CameraActivity extends Activity {
 
     private void setModePet() {
         // Pet mode
-    }
-/*
-    public float getInitialRectSize(int type) {
-        float res;
-        if( type==MonitorModeActivity.MONITOR_MODE_BABY ) {
-            res = ((mInitTargetRect.right-mInitTargetRect.left) +
-                    (mInitTargetRect.right-mInitTargetRect.left)) / 2.f;
-        } else if( type==MonitorModeActivity.MONITOR_MODE_PET ) {
-            res = ((mInitBoundaryRect.right-mInitBoundaryRect.left) +
-                    (mInitBoundaryRect.right-mInitBoundaryRect.left)) / 2.f;
-        }
-
-        return res;
-    }
-*/
-    public class ClientThread implements Runnable {
-        private static final String TAG = "ClientThread";;
-
-        public void run() {
-            try {
-                InetAddress serverAddr = InetAddress.getByName(mServerIpAddress);
-                Log.i(TAG, "C: Connecting...");
-                Socket socket = new Socket(serverAddr, SERVERPORT);
-                connected = true;
-                while (connected) {
-                    try {
-                        if (!clientMsg.isEmpty()) {
-                            Log.i(TAG, "C: Sending command.");
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket
-                                        .getOutputStream())), true);
-                                // where you issue the commands
-                                out.println(clientMsg);
-                            Log.i(TAG, "C: Sent.");
-
-                            clientMsg = "";
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "S: Error", e);
-                    }
-                }
-                socket.close();
-                Log.i(TAG, "C: Closed.");
-            } catch (Exception e) {
-                Log.e(TAG, "C: Error", e);
-                connected = false;
-            }
-        }
     }
 }

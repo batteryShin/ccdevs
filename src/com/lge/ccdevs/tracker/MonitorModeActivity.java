@@ -11,14 +11,19 @@ import java.util.Enumeration;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
+import com.lge.ccdevs.tracker.MessagingService.MessagingEventReceiver;
+
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.ResultReceiver;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -39,10 +44,10 @@ public class MonitorModeActivity extends Activity {
 
     public static final int SERVERPORT = 5555;
     private String mServerIP = null;
-    private ServerSocket serverSocket;
-    private ServerThread mThread;
+
     private MsgHandler mHandler;
 
+    private MonitorEventReceiver mEventReceiver = null;
     private static TextView mTextStatus;
     private Context mContext;
 
@@ -54,6 +59,11 @@ public class MonitorModeActivity extends Activity {
         mContext = this;
         mServerIP = getWifiIpAddress();
 
+        if(mHandler!=null && mHandler.hasMessages(0) ) {
+            mHandler.removeMessages(0);
+        }
+        mHandler = new MsgHandler();
+
         TextView text_ip = (TextView)findViewById(R.id.text_ip);
         text_ip.setText("Server IP: " + mServerIP);
 
@@ -62,16 +72,18 @@ public class MonitorModeActivity extends Activity {
         if (mServerIP == null) {
             Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
         } else {
-            if(mHandler!=null && mHandler.hasMessages(0) ) {
-                mHandler.removeMessages(0);
-            }
-            mHandler = new MsgHandler();
-
-            if( mThread!=null && mThread.isAlive() ) {
-                mThread.interrupt();
-            }
-            mThread = new ServerThread();
-            mThread.start();
+            Intent intent = new Intent("MessagingService");
+            intent.putExtra("ServerIP", mServerIP);
+            startService(intent);
+            
+            
+            mEventReceiver = new MonitorEventReceiver();
+            IntentFilter eventFilter = new IntentFilter();
+            eventFilter.addAction("MSG_WAITING");
+            eventFilter.addAction("MSG_CONNECTED");
+            eventFilter.addAction("MSG_NO_INTERNET");
+            eventFilter.addAction("MSG_ERROR");
+            registerReceiver(mEventReceiver, eventFilter);
         }
 
 
@@ -131,27 +143,13 @@ public class MonitorModeActivity extends Activity {
     protected void onDestroy() {
         Intent intent = new Intent("MessagingService");
         stopService(intent);
-
-        if( mThread!=null && mThread.isAlive() ) {
-            mThread.interrupt();
-        }
-        mThread = null;
-
+        unregisterReceiver(mEventReceiver);
 
         if(mHandler!=null && mHandler.hasMessages(0) ) {
             mHandler.removeMessages(0);
         }
         mHandler = null;
-
-        if (serverSocket != null) {
-            try {
-                serverSocket.close();
-                serverSocket = null;
-            } catch(Exception ex) {
-                Log.e("serverSocket close failed", ex.toString());
-            }
-        }
-
+        
         super.onDestroy();
     }
 
@@ -187,7 +185,6 @@ public class MonitorModeActivity extends Activity {
                 (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
     }
 
-
     private class MsgHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -218,38 +215,18 @@ public class MonitorModeActivity extends Activity {
         }
     }
 
+    class MonitorEventReceiver extends BroadcastReceiver {
 
-    public class ServerThread extends Thread implements Runnable {
         @Override
-        public void run() {
-            try {
-                if (mServerIP != null) {
-                    mHandler.sendEmptyMessage(MSG_WAITING);
-                    serverSocket = new ServerSocket(SERVERPORT);
-                    while (true) {
-                        // listen for incoming clients
-                        Socket client = serverSocket.accept();
-                        mHandler.sendEmptyMessage(MSG_CONNECTED);
-
-                        //
-                        try {
-                            Log.d("MessagingService", "C: Sending command.");
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-                            out.println("hello, this is server.. you are connected!");
-                            Log.d("MessagingService", "C: Sent.");
-                        } catch (Exception e) {
-                            Log.e("MessagingService", "S: Error", e);
-                        }
-                        //
-                    }
-                } else {
-                    mHandler.sendEmptyMessage(MSG_NO_INTERNET);
-                }
-            } catch (Exception e) {
-                if (mHandler!=null) {
-                    mHandler.sendEmptyMessage(MSG_ERROR);
-                }
-                e.printStackTrace();
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == "MSG_WAITING") {
+                mHandler.sendEmptyMessage(MSG_WAITING);
+            } else if (intent.getAction() == "MSG_CONNECTED") {
+                mHandler.sendEmptyMessage(MSG_CONNECTED);
+            } else if (intent.getAction() == "MSG_NO_INTERNET") {
+                mHandler.sendEmptyMessage(MSG_NO_INTERNET);
+            } else if (intent.getAction() == "MSG_ERROR") {
+                mHandler.sendEmptyMessage(MSG_ERROR);
             }
         }
     }

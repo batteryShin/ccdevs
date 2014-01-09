@@ -28,8 +28,8 @@ public class WatcherModeActivity extends Activity {
         // connect to the server
         mEditTextIP = (EditText)findViewById(R.id.server_ip);
         mButtonConnect = (Button)findViewById(R.id.connect_phones);
-        mButtonConnect.setTag(0);
-        mButtonConnect.setText("con");
+/*        mButtonConnect.setTag(0);
+        mButtonConnect.setText("con");*/
         mButtonConnect.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,6 +75,7 @@ public class WatcherModeActivity extends Activity {
             mEditTextIP.setTextColor(Color.parseColor("#000000"));
             mEditTextIP.setEnabled(true);
             mEditTextIP.setFocusableInTouchMode(true);
+            mButtonConnect.setTag(0);
         } else {
             mButtonConnect.setText("discon");
             if (mServerIP!=null) {
@@ -85,6 +86,7 @@ public class WatcherModeActivity extends Activity {
                 intent.putExtra("com.lge.ccdevs.tracker.getIP", new ResultReceiver(null) {
                     @Override
                     protected void onReceiveResult(int resultCode, Bundle resultData) {
+                        Log.d("kyu", "WatcherModeActivity::onReceiveResult");
                         if (resultCode == 0) {
                             String ip = resultData.getString("com.lge.ccdevs.tracker.serverIP");
                             mEditTextIP.setText(ip);
@@ -96,6 +98,7 @@ public class WatcherModeActivity extends Activity {
             mEditTextIP.setTextColor(Color.parseColor("#888888"));
             mEditTextIP.setEnabled(false);
             mEditTextIP.setFocusable(false);
+            mButtonConnect.setTag(1);
         }
         super.onResume();
     }
