@@ -26,6 +26,7 @@ public class TrackerServer extends Service {
 
     private final IBinder mBinder = new LocalBinder();
     
+    private WatcherEventReceiver mEventReceiver = null;
     private NotificationManager mNM;
     private String mMessage = "";
     
@@ -61,15 +62,14 @@ public class TrackerServer extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("kyu", "onStartCommand");
         SERVERIP = intent.getStringExtra("com.lge.ccdevs.tracker.IP");
         
         Thread cThread = new Thread(new ServerThread());
         cThread.start();
         
-        WatcherEventReceiver mEventReceiver = new WatcherEventReceiver();
+        mEventReceiver = new WatcherEventReceiver();
         IntentFilter eventFilter = new IntentFilter();
-        eventFilter.addAction("com.lge.ccdevs.tracker.getIP");
+        eventFilter.addAction(MSG_GET_SERVER_IP);
         registerReceiver(mEventReceiver, eventFilter);
 
         return START_STICKY;
@@ -77,7 +77,7 @@ public class TrackerServer extends Service {
     
     @Override
     public void onDestroy() {
-        Toast.makeText(getApplicationContext(), "stop watching..", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "stop watching..", Toast.LENGTH_SHORT).show();
         
         if (mSocket != null) {
             try {
@@ -85,6 +85,11 @@ public class TrackerServer extends Service {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mSocket = null;
+        }
+        if (mEventReceiver != null) {
+            unregisterReceiver(mEventReceiver);
+            mEventReceiver = null;
         }
         super.onDestroy();
     }
@@ -103,12 +108,11 @@ public class TrackerServer extends Service {
                     }
                 });
                 mSocket = new Socket(serverAddr, SERVERPORT);
-                while (true) {
+                while (mSocket != null) {
                     try {
                         BufferedReader in = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
                         String line = null;
                         while ((line = in.readLine()) != null) {
-                            Log.d("ServerActivity", line);
                             mMessage = line;
                             handler.post(new Runnable() {
                                 @Override
@@ -166,8 +170,9 @@ public class TrackerServer extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d("kyu", "TrackerServer::onReceive");
+            
             if (intent.getAction() == MSG_GET_SERVER_IP) {
-                Log.d("kyu", "onReceive:: send IP");
                 ResultReceiver rr = intent.getExtras().getParcelable("com.lge.ccdevs.tracker.getIP");
                 Bundle b = new Bundle();
                 b.putString("com.lge.ccdevs.tracker.serverIP", SERVERIP);

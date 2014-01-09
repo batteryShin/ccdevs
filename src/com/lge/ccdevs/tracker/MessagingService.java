@@ -5,9 +5,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-
-import com.lge.ccdevs.tracker.CameraActivity.ClientThread;
 
 import android.app.IntentService;
 import android.app.Service;
@@ -19,6 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.ResultReceiver;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,10 +30,9 @@ public class MessagingService extends Service {
     private static final int SHOW_TOAST = 0;
     private static final int SEND_MSG = 1;
     
-    private boolean mServerConnected = false;
-    private Socket mSocket;
-    private String clientMsg = "hi";
-    private String mServerIpAddress = "";
+    private ServerSocket mServerSocket = null;
+    private Socket mClient = null;
+    private String mServerIp = "";
     
     private MessagingEventReceiver mEventReceiver;
 
@@ -41,58 +40,52 @@ public class MessagingService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("MessagingService", "onStartCommand");
-        Message msg = new Message();
-        msg.what = SHOW_TOAST;
-        msg.obj = "onStartCommand";
-        handler.sendMessage(msg);
-        
+
         Bundle b = intent.getExtras();
         if (b == null) {
             Log.d("MessagingService", "onStartCommand::smt. wrong, cannot start service!!");
             return -1;
         }
-        mServerIpAddress = b.getString("ServerIP");
-        
-        if (mServerIpAddress == null || mServerIpAddress.equals("")) {
-            Log.d("MessagingService", "Cannot connect to the Server!!");
-        } else {
-            if (!mServerConnected) {
-                Message msg2 = new Message();
-                msg2.what = SEND_MSG;
-                handler.sendMessageDelayed(msg2, 1000);
-            } else {
-                Message msg2 = new Message();
-                msg2.what = SEND_MSG;
-                handler.sendMessage(msg2);
-            }
+        mServerIp = b.getString("ServerIP");
+
+        if (mServerIp == null || mServerIp.equals("")) {
+            Log.d("MessagingService", "Cannot connect to the Server, invalid IP!!");
+            return -1;
         }
-        
-        
+
+        Thread fst = new Thread(new ServerThread());
+        fst.start();
+
         mEventReceiver = new MessagingEventReceiver();
         IntentFilter eventFilter = new IntentFilter();
         eventFilter.addAction(PROCESS_MSG);
         registerReceiver(mEventReceiver, eventFilter);
+        
         return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         Log.d("MessagingService", "onDestroy");
-        
-        Message msg = new Message();
-        msg.what = SHOW_TOAST;
-        msg.obj = "onDestroy";
-        handler.sendMessage(msg);
-        
-        if (mServerConnected) {
+
+        if (mServerSocket != null) {
             try {
-                mSocket.close();
+                mServerSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Log.d("MessagingService", "C: Closed.");
+            mServerSocket = null;
         }
         
+        if (mClient != null) {
+            try {
+                mClient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mClient = null;
+        }
+
         unregisterReceiver(mEventReceiver);
         super.onDestroy();
     }
@@ -108,16 +101,21 @@ public class MessagingService extends Service {
                   break;
               case SEND_MSG :
                   try {
-                      if (!clientMsg.isEmpty()) {
-                          Log.d("MessagingService", "C: Sending command.");
-                          PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(mSocket.getOutputStream())), true);
-                          out.println(clientMsg);
-                          Log.d("MessagingService", "C: Sent.");
-                          
-                          clientMsg = "";
-                      }
+                      Log.d("MessagingService", "C: Sending command.");
+
+                      PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(mClient.getOutputStream())), true);
+                      String message = (String)msg.obj;
+                      out.println(message);
+
+                      Log.d("MessagingService", "C: Sent.");
                   } catch (Exception e) {
                       Log.e("MessagingService", "S: Error", e);
+                      
+                      Intent intent3 = new Intent();
+                      intent3.setAction("ERROR");
+                      sendBroadcast(intent3);
+                      
+                      e.printStackTrace();
                   }
                   break;
               default : break;
@@ -126,12 +124,12 @@ public class MessagingService extends Service {
     };
 
     public void sendMessage(String msg) {
-        Log.d("MessagingService", "sendMessage:" +msg);
-        clientMsg = msg;
-        
-        Message msg2 = new Message();
-        msg2.what = SEND_MSG;
-        handler.sendMessage(msg2);
+        Log.d("MessagingService", "sendMessage:" + msg);
+                
+        Message message = new Message();
+        message.what = SEND_MSG;
+        message.obj = msg;
+        handler.sendMessage(message);
     }
     
     class MessagingEventReceiver extends BroadcastReceiver {
@@ -149,4 +147,44 @@ public class MessagingService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+    public class ServerThread implements Runnable {
+        public void run() {
+            try {
+                if (mServerIp != null) {
+                    Intent intent = new Intent();
+                    intent.setAction("MSG_WAITING");
+                    sendBroadcast(intent);
+                    
+                    mServerSocket = new ServerSocket(SERVERPORT);
+                    while (true) {
+                        // listen for incoming clients
+                        mClient = mServerSocket.accept();
+
+                        Intent intent2 = new Intent();
+                        intent2.setAction("MSG_CONNECTED");
+                        sendBroadcast(intent2);
+
+                        Message message = new Message();
+                        message.what = SEND_MSG;
+                        message.obj = "hello, this is server.. you are connected!";
+                        handler.sendMessage(message);
+                    }
+                } else {
+                    Intent intent = new Intent();
+                    intent.setAction("MSG_NO_INTERNET");
+                    sendBroadcast(intent);
+                }
+            } catch (Exception e) {
+                Intent intent = new Intent();
+                intent.setAction("MSG_ERROR");
+                sendBroadcast(intent);
+                
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    
+     
 }

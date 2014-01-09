@@ -11,12 +11,17 @@ import java.util.Enumeration;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
+import com.lge.ccdevs.tracker.MessagingService.MessagingEventReceiver;
+
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.ResultReceiver;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -37,8 +42,8 @@ public class MonitorModeActivity extends Activity {
 
     public static final int SERVERPORT = 5555;
     private String mServerIP = null;
-    private ServerSocket serverSocket;
 
+    private MonitorEventReceiver mEventReceiver = null;
     private static TextView mTextStatus;
     private Context mContext;
 
@@ -58,12 +63,18 @@ public class MonitorModeActivity extends Activity {
         if (mServerIP == null) {
             Toast.makeText(mContext, "network not connected!!", Toast.LENGTH_SHORT).show();
         } else {
-            Thread fst = new Thread(new ServerThread());
-            fst.start();
-
-/*            Intent intent = new Intent("MessagingService");
+            Intent intent = new Intent("MessagingService");
             intent.putExtra("ServerIP", mServerIP);
-            startService(intent);*/
+            startService(intent);
+            
+            
+            mEventReceiver = new MonitorEventReceiver();
+            IntentFilter eventFilter = new IntentFilter();
+            eventFilter.addAction("MSG_WAITING");
+            eventFilter.addAction("MSG_CONNECTED");
+            eventFilter.addAction("MSG_NO_INTERNET");
+            eventFilter.addAction("MSG_ERROR");
+            registerReceiver(mEventReceiver, eventFilter);
         }
 
 
@@ -123,6 +134,8 @@ public class MonitorModeActivity extends Activity {
     protected void onDestroy() {
         Intent intent = new Intent("MessagingService");
         stopService(intent);
+        unregisterReceiver(mEventReceiver);
+        
         super.onDestroy();
     }
 
@@ -179,36 +192,18 @@ public class MonitorModeActivity extends Activity {
         }
     };
 
+    class MonitorEventReceiver extends BroadcastReceiver {
 
-    public class ServerThread implements Runnable {
-
-        public void run() {
-            try {
-                if (mServerIP != null) {
-                    handler.sendEmptyMessage(MSG_WAITING);
-                    serverSocket = new ServerSocket(SERVERPORT);
-                    while (true) {
-                        // listen for incoming clients
-                        Socket client = serverSocket.accept();
-                        handler.sendEmptyMessage(MSG_CONNECTED);
-
-                        //
-                        try {
-                            Log.d("MessagingService", "C: Sending command.");
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-                            out.println("hello, this is server.. you are connected!");
-                            Log.d("MessagingService", "C: Sent.");
-                        } catch (Exception e) {
-                            Log.e("MessagingService", "S: Error", e);
-                        }
-                        //
-                    }
-                } else {
-                    handler.sendEmptyMessage(MSG_NO_INTERNET);
-                }
-            } catch (Exception e) {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == "MSG_WAITING") {
+                handler.sendEmptyMessage(MSG_WAITING);
+            } else if (intent.getAction() == "MSG_CONNECTED") {
+                handler.sendEmptyMessage(MSG_CONNECTED);
+            } else if (intent.getAction() == "MSG_NO_INTERNET") {
+                handler.sendEmptyMessage(MSG_NO_INTERNET);
+            } else if (intent.getAction() == "MSG_ERROR") {
                 handler.sendEmptyMessage(MSG_ERROR);
-                e.printStackTrace();
             }
         }
     }
