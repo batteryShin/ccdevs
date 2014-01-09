@@ -69,12 +69,16 @@ public class CameraActivity extends Activity {
 
     private int mMonitorMode;
 
-    // Vehicle Mode Settings_start
-    private SensorEventListener mSensorListener = null;
+    // Sensor related start
+    private SensorEventListener mAccSensorListener = null;
+    private SensorEventListener mLightSensorListener = null;
+    private boolean mReliableAccSensor = true;
+    private boolean mReliableLightSensor = true;
     private boolean mIsFirst = true;
+    private boolean mFlash = false;
     private float mPrevGx;
     private float mPrevGz;
-    // Vehicle Mode Settings_end
+    // Sensor related end
 
     private PowerManager.WakeLock mWL;
 
@@ -209,6 +213,38 @@ public class CameraActivity extends Activity {
         mPreview.setOnRecordingStopListener(mOnRecordingStopListener);
         mPreview.setOnTrackResultListener(mIOnTrackResultListener);
 
+        SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        Sensor light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        mLightSensorListener = new SensorEventListener() {
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+                Log.d(TAG,"Accuracy of light sensor is changed to "+ accuracy);
+                if( accuracy==SensorManager.SENSOR_STATUS_ACCURACY_HIGH ) {
+                    mReliableLightSensor = true;
+                } else {
+                    mReliableLightSensor = false;
+                }
+            }
+
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                if( !mReliableLightSensor ) {
+                    return;
+                }
+
+                Log.d(TAG,"Light value(lux) is changed to "+event.values[0]); 
+                if( event.values[0] < CameraPreview.THRESHOLD_FLASHON_LUX ) {
+                    mFlash = true;
+                    mPreview.setCameraFlash(mFlash);
+                } else {
+                    mFlash = false;
+                    mPreview.setCameraFlash(mFlash);
+                }
+            }
+        };
+
+        sensorManager.registerListener(mLightSensorListener, light, SensorManager.SENSOR_DELAY_NORMAL);
+
         // set target setting window
         mTargetLayer = (FrameLayout)LayoutInflater.from(mContext).inflate(R.layout.target_setting, null);
         mTargetSettingLayer = (FrameLayout)mTargetLayer.findViewById(R.id.target_setting_layout);
@@ -337,11 +373,18 @@ public class CameraActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if (mSensorListener != null) {
-            SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-            sensorManager.unregisterListener(mSensorListener);
-            mSensorListener = null;
+        SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        if (mAccSensorListener != null) {
+            sensorManager.unregisterListener(mAccSensorListener);
+            mAccSensorListener = null;
             mIsFirst = true;
+        }
+
+        if (mLightSensorListener != null) {
+            sensorManager.unregisterListener(mLightSensorListener);
+            mLightSensorListener = null;
+            mFlash = false;
+            mPreview.setCameraFlash(mFlash);
         }
         super.onDestroy();
     }
@@ -423,16 +466,24 @@ public class CameraActivity extends Activity {
         SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         Sensor acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-
-        mSensorListener = new SensorEventListener() {
+        mAccSensorListener = new SensorEventListener() {
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
-                //
+                Log.d(TAG,"Accuracy of light sensor is changed to "+ accuracy);
+                if( accuracy==SensorManager.SENSOR_STATUS_ACCURACY_HIGH ) {
+                    mReliableAccSensor = true;
+                } else {
+                    mReliableAccSensor = false;
+                }
             }
 
             @Override
             public void onSensorChanged(SensorEvent event) {
+                if( !mReliableAccSensor ) {
+                    return;
+                }
+
                 float Gx = event.values[0];
                 float Gy = event.values[1];
                 float Gz = event.values[2];
@@ -463,7 +514,7 @@ public class CameraActivity extends Activity {
                 }
             }};
 
-        sensorManager.registerListener(mSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(mAccSensorListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void setModeBaby() {

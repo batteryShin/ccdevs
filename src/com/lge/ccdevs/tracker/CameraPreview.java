@@ -30,6 +30,10 @@ import android.widget.Toast;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";
 
+    private static final int FRAME_COUNT = 5;
+    private static final int THRESHOLD_PX_DISTANCE = 100;
+    public static final int THRESHOLD_FLASHON_LUX = 20;
+
     private Context mContext;
 
     Camera mCamera;    
@@ -49,10 +53,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private boolean mBoundarySet = false;
     private boolean  mCVInitialized = false;
     private int mCheck = 0;
-    
-    private static int d = 0;
-    private static final int FRAME_COUNT = 5;
-    private static final int THRESHOLD_PX_DISTANCE = 100;
 
     private static int mFrameCount = 0;
     private RectF mScaledTargetRect;
@@ -382,10 +382,26 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             params.setPreviewSize(mFrameWidth, mFrameHeight);
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
 
-            if( getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH) ) {
-                params.setFlashMode(Parameters.FLASH_MODE_TORCH);
-            }
             mCamera.setParameters(params);
+        }
+    }
+
+    public void setCameraFlash(boolean on) {
+        if( mCamera!=null &&
+            getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+            Camera.Parameters params = mCamera.getParameters();
+            if(on) {
+                if( params.getFlashMode()!=Parameters.FLASH_MODE_TORCH ) {
+                    params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+                    mCamera.setParameters(params);
+                }
+            } else {
+                if( params.getFlashMode()!=Parameters.FLASH_MODE_OFF ) {
+                    params.setFlashMode(Parameters.FLASH_MODE_OFF);
+                    mCamera.setParameters(params);
+                }
+            }
+
         }
     }
     
