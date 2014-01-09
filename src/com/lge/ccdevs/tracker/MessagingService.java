@@ -61,7 +61,7 @@ public class MessagingService extends Service {
         eventFilter.addAction(PROCESS_MSG);
         registerReceiver(mEventReceiver, eventFilter);
         
-        return Service.START_STICKY;
+        return Service.START_REDELIVER_INTENT;
     }
 
     @Override
