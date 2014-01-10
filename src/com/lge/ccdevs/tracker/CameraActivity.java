@@ -396,7 +396,9 @@ public class CameraActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, ID_SET_TARGET, 0, "set target");
-        menu.add(0, ID_SET_BOUNDARY, 0, "set boundary");
+        if( mMonitorMode==MonitorModeActivity.MONITOR_MODE_PET ) {
+            menu.add(0, ID_SET_BOUNDARY, 0, "set boundary");
+        }
         menu.add(0, ID_START_RECORD, 0, "start recording");
         menu.add(0, ID_STOP_RECORD, 0, "stop recording");
         return super.onCreateOptionsMenu(menu);
