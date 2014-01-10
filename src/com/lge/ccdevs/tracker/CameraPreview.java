@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+import java.text.SimpleDateFormat;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -83,7 +86,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 	static public void test_capture(Bitmap img, String fname) {
         try {
-            FileOutputStream out = new FileOutputStream("/sdcard/mytracker" + File.separator + fname);
+            String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+            path += File.separator + "tracker";
+
+            FileOutputStream out = new FileOutputStream(path + File.separator + fname);
             img.compress(Bitmap.CompressFormat.JPEG, 100, out);
         } catch (FileNotFoundException e) {
         }
@@ -441,20 +447,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // Step 2: Set sources
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
         String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        path += File.separator + "mytracker";
-                
-        File out = new File(path);
-        if (!out.exists()) {
-            out.mkdirs();
-        }
-                
-        String filepath = path + File.separator + "video" + (mVideoNum++) + ".mp4";
+        path += File.separator + "tracker";
+        String filepath = path + File.separator + "video_" + getSystemTime() + ".mp4";
+
         mMediaRecorder.setOutputFile(filepath);
 
 
@@ -526,5 +526,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mMediaRecorder = null;
             mCamera.lock();           // lock camera for later use
         }
+    }
+
+    public String getSystemTime() {
+        long day = System.currentTimeMillis(); //total time in milliseconds since 1970
+
+        Calendar c = Calendar.getInstance(Locale.KOREAN);
+        c.setTimeInMillis(day);
+
+        SimpleDateFormat format = new SimpleDateFormat("MMdd_HHmmss");
+
+        return format.format(c.getTime());
     }
 }

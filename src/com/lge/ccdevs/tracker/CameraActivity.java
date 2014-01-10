@@ -26,6 +26,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -334,7 +335,10 @@ public class CameraActivity extends Activity {
             }
         }
 
-        outDir = new File(getString(R.string.track_record_dir));
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        path += File.separator + "tracker";
+
+        outDir = new File(path);
         if( outDir.mkdirs() ) {
             Log.d(TAG, "Make [track_record_dir] !!");
         }
