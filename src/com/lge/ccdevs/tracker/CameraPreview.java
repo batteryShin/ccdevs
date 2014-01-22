@@ -33,9 +33,10 @@ import android.widget.Toast;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";
 
-    private static final int FRAME_COUNT = 5;
-    private static final int THRESHOLD_PX_DISTANCE = 100;
-    public static final int THRESHOLD_FLASHON_LUX = 20;
+    public static final int FRAME_COUNT = 1;
+    public static final int THRESHOLD_PX_DISTANCE = 200;
+    public static final int THRESHOLD_FLASHON_LUX = 5;
+    public static final float THRESHOLD_SENSOR_MOVEMENT = 1.5f;
 
     private Context mContext;
 
@@ -76,6 +77,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private MediaRecorder mMediaRecorder = null;
     private static final int MAX_RECORDING_MSEC = 60000;
     private static int mVideoNum;
+    private boolean mIsRecording = false;
+    private long mPrevRecordingTime = -1;
 
     // ###dc### Native call for CV process..
 	private native final void native_cv_facex(Bitmap bmp);
@@ -155,6 +158,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public CameraPreview(Context context) {
         super(context);
         mContext = context;
+        Log.d("kyu-test", "CameraPreview::CameraPreview");
 
         holder = getHolder();
         holder.addCallback(this);
@@ -182,17 +186,26 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Log.d("kyu-test", "CameraPreview::surfaceChanged");
         setupCamera(width, height);
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        Log.d("kyu-test", "CameraPreview::surfaceCreated");
         openCamera();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        releaseCamera();
+        Log.d("kyu-test", "CameraPreview::surfaceDestroyed");
+        if (mIsRecording) {
+            Log.d("kyu-test", "CameraPreview::stopRecording");
+            stopRecording();
+        } else {
+            Log.d("kyu-test", "CameraPreview::releaseCamera");
+            releaseCamera();
+        }
     }
 
     public void setPreview() throws IOException {
@@ -239,7 +252,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         if( !mCVInitialized ) {
             Log.i(TAG, "native_cv_init() call");
             native_cv_init(mBitmap, mScaledTargetRect);
+/*            
             native_cv_init(mBitmap, mScaledTargetPts);
+*/            
             mCVInitialized = true;
             return;
         }
@@ -248,15 +263,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         Log.i(TAG, "native_cv_track() call");
         mScaledTargetRect = native_cv_track(mBitmap);
+/*        
         Log.i(TAG, "native_cv_match() call");
         mScaledTargetPts = native_cv_match(mBitmap);
+*/
 
         // get detected rect and put it in mDetectedRect
         if( mTIMat.mapRect(mDetectedRect,mScaledTargetRect) ) {
             Log.i(TAG, "draw rect = (" + mDetectedRect.left + 
                     "," + mDetectedRect.top + "), (" + 
                     mDetectedRect.right + "," + mDetectedRect.bottom + ")");
-//            mIOnDrawTargetListener.onDrawTarget(mDetectedRect);
             mDetectedPoint.x = (mDetectedRect.left+mDetectedRect.right)/2.f;
             mDetectedPoint.y = (mDetectedRect.top+mDetectedRect.bottom)/2.f;
             mIOnDrawTargetListener.onDrawTarget(mDetectedPoint, 100);
@@ -269,14 +285,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 }
             }
         }
-
+/*
         mTIMat.mapPoints(mDetectedPts,mScaledTargetPts);
         Log.i(TAG, "draw pts = (" + mDetectedPts[0] + "," + mDetectedPts[1] +
                 "), (" + mDetectedPts[2] + "," + mDetectedPts[3] + "), (" +
                 "), (" + mDetectedPts[4] + "," + mDetectedPts[5] + "), (" +
                 "), (" + mDetectedPts[6] + "," + mDetectedPts[7] + ")");
         mIOnDrawTargetListener.onDrawTarget(mDetectedPts);
-
+*/
         if(mBoundarySet) {
             mIOnDrawTargetListener.onDrawBoundary(mBoundaryRect);
         }
@@ -492,34 +508,63 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
     
     public boolean startRecording() {
+        Log.d("kyu-test", "CameraPreview::startRecording");
+        long currTime = System.currentTimeMillis();
+        Log.d("kyu-test", "current time = " + currTime);
+        
+        
+        if (mPrevRecordingTime > 0 && (currTime - mPrevRecordingTime) < 3000) {
+            Log.d("kyu-test", "don't start!!");
+            return false;
+        }
+        
+        if (mIsRecording) {
+            Log.d("kyu-test", "CameraPreview::startRecording, stop!!");
+            stopRecording();
+        }
      // initialize video camera
         if (prepareVideoRecorder()) {
+            Log.d("kyu-test", "CameraPreview::startRecording, prepare");
             // Camera is available and unlocked, MediaRecorder is prepared,
             // now you can start recording
             mMediaRecorder.start();
 
             // inform the user that recording has started
             Toast.makeText(getContext(), "Recording start!!", Toast.LENGTH_SHORT).show();
-            return true;
+            
+            mIsRecording = true;
         } else {
+            Log.d("kyu-test", "CameraPreview::startRecording, prepare failed");
             // prepare didn't work, release the camera
             releaseMediaRecorder();
             Toast.makeText(getContext(), "Recording failed!! Try again!!", Toast.LENGTH_SHORT).show();
         }        
-        return false;
+        return mIsRecording;
     }
     
     public void stopRecording() {
-     // stop recording and release camera
-        mMediaRecorder.stop();  // stop the recording
-        releaseMediaRecorder(); // release the MediaRecorder object
-        mCamera.lock();         // take camera access back from MediaRecorder
-
-        // inform the user that recording has stopped
-        Toast.makeText(getContext(), "Recording stopped", Toast.LENGTH_SHORT).show();
+        Log.d("kyu-test", "CameraPreview::stopRecording");
+        
+        
+        
+        if (mMediaRecorder != null && mIsRecording) {
+            // stop recording and release camera
+            mMediaRecorder.stop();  // stop the recording
+            releaseMediaRecorder(); // release the MediaRecorder object
+            mCamera.lock();         // take camera access back from MediaRecorder
+    
+            // inform the user that recording has stopped
+            Toast.makeText(getContext(), "Recording stopped", Toast.LENGTH_SHORT).show();
+            
+            
+            mPrevRecordingTime = System.currentTimeMillis();
+            
+            mIsRecording = false;
+        }
     }
     
     private void releaseMediaRecorder() {
+        Log.d("kyu-test", "CameraPreview::releaseMediaRecorder");
         if (mMediaRecorder != null) {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object

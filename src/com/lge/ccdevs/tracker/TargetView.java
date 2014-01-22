@@ -98,6 +98,8 @@ public class TargetView extends View {
         Log.i(TAG, "TargetView::drawCircle = (" + target.x + ", " + target.y + "), size=" + radius);
         mPtTargetCenter = target;
         mPtTargetRadius = radius;
+
+        this.invalidate();
     }
 
     public void drawTarget(float[] target) {

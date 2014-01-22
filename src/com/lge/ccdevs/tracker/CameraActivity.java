@@ -78,6 +78,7 @@ public class CameraActivity extends Activity {
     private boolean mIsFirst = true;
     private boolean mFlash = false;
     private float mPrevGx;
+    private float mPrevGy;
     private float mPrevGz;
     // Sensor related end
 
@@ -505,13 +506,16 @@ public class CameraActivity extends Activity {
 
                 if (mIsFirst) {
                     mPrevGx = Gx;
+                    mPrevGy = Gy;
                     mPrevGz = Gz;
                     mIsFirst = false;
                     return;
                 }
 
 
-                if (Math.abs(mPrevGx - Gx) > 2 || Math.abs(mPrevGz - Gz) > 2) {
+                if ( Math.abs(mPrevGx - Gx) > CameraPreview.THRESHOLD_SENSOR_MOVEMENT || 
+                     Math.abs(mPrevGy - Gy) > CameraPreview.THRESHOLD_SENSOR_MOVEMENT ||
+                     Math.abs(mPrevGz - Gz) > CameraPreview.THRESHOLD_SENSOR_MOVEMENT ) {
                     Log.i(TAG, "sensor changed!!");
                     String clientMsg = "vehicle movement detected!!";
 
@@ -519,6 +523,7 @@ public class CameraActivity extends Activity {
                         mIsRecording = mPreview.startRecording();
                     }
                     mPrevGx = Gx;
+                    mPrevGy = Gy;
                     mPrevGz = Gz;
 
                     Log.i(TAG, "send message to MessagingService!");
