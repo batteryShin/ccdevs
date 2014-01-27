@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.ResultReceiver;
+import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -28,6 +29,7 @@ public class TrackerServer extends Service {
     
     private WatcherEventReceiver mEventReceiver = null;
     private NotificationManager mNM;
+    private Vibrator mVB;
     private String mMessage = "";
     
     // default ip
@@ -56,6 +58,8 @@ public class TrackerServer extends Service {
     public void onCreate() {
         mContext = this;
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+
+        mVB = (Vibrator)getSystemService(VIBRATOR_SERVICE);
         
         super.onCreate();
     }
@@ -165,6 +169,7 @@ public class TrackerServer extends Service {
         
         builder.setContentIntent(pi);
         mNM.notify(R.layout.activity_main, builder.build());
+        mVB.vibrate(250);
     }
 
     class WatcherEventReceiver extends BroadcastReceiver {
